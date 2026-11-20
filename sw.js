@@ -1,7 +1,7 @@
 // Offline-first service worker. Online: always fetches the latest files (and refreshes the cache).
 // Offline: serves the saved copy so the app still opens and works.
-var CACHE = 'class-calendar-v3';
-var CORE = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png'];
+var CACHE = 'class-calendar-v4';
+var CORE = ['./', 'index.html', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'favicon-64.png', 'badge-logo.png', 'loading-logo.jpg'];
 
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) {
