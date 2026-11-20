@@ -7,6 +7,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Class Calendar">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <meta name="theme-color" content="#DDE6F5" id="themeMeta">
 <title>Section A Class Calendar</title>
 <style>
@@ -795,33 +798,9 @@ body:not(.widget-mode) .shell{padding-bottom:72px}
     if (deferredInstall) { deferredInstall.prompt(); deferredInstall = null; return; }
     toast('Chrome-er \u22EE menu \u2192 "Add to Home screen" chap dao.');
   });
-  (function () {
-    try {
-      var logo = document.querySelector('.bdg-mono svg'); if (!logo) return;
-      var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#1E3350"/><g transform="translate(3.2 3.6) scale(.8)">' + logo.innerHTML + '</g></svg>';
-      var img = new Image();
-      img.onload = function () {
-        try {
-          function png(n) { var c = document.createElement('canvas'); c.width = c.height = n; c.getContext('2d').drawImage(img, 0, 0, n, n); return c.toDataURL('image/png'); }
-          var i192 = png(192), i512 = png(512);
-          var apple = document.createElement('link'); apple.rel = 'apple-touch-icon'; apple.href = i192; document.head.appendChild(apple);
-          if (!/^https?:$/.test(location.protocol)) return;
-          var dir = location.origin + location.pathname.replace(/[^\/]*$/, ''), page = location.origin + location.pathname;
-          var man = {
-            name: 'Section A Class Calendar', short_name: 'Class Calendar', description: 'Class routine, tasks and exams',
-            start_url: page + '?widget=1', scope: dir, display: 'standalone', orientation: 'portrait',
-            background_color: '#EDF1F8', theme_color: '#DDE6F5',
-            icons: [{src: i192, sizes: '192x192', type: 'image/png', purpose: 'any'}, {src: i512, sizes: '512x512', type: 'image/png', purpose: 'any'}],
-            shortcuts: [{name: 'Full calendar', short_name: 'Calendar', url: page, icons: [{src: i192, sizes: '192x192', type: 'image/png'}]}]
-          };
-          var l = document.createElement('link'); l.rel = 'manifest';
-          l.href = URL.createObjectURL(new Blob([JSON.stringify(man)], {type: 'application/manifest+json'}));
-          document.head.appendChild(l);
-        } catch (e) {}
-      };
-      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-    } catch (e) {}
-  })();
+  if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+    window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
+  }
   function setMenu(open){
     $('quickMenu').classList.toggle('open',open); if(open) placeMenu();
     $('menuBackdrop').classList.toggle('open',open);
