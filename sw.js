@@ -1,6 +1,6 @@
 // Offline-first service worker. Online: always fetches the latest files (and refreshes the cache).
 // Offline: serves the saved copy so the app still opens and works.
-var CACHE = 'class-calendar-v8';
+var CACHE = 'class-calendar-v9';
 var CORE = ['./', 'index.html', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'favicon-64.png', 'badge-logo.png', 'splash-192.png', 'splash-512.png', 'loading-logo.png'];
 
 self.addEventListener('install', function (e) {
@@ -45,5 +45,14 @@ self.addEventListener('fetch', function (e) {
       if (req.mode === 'navigate') return caches.match('index.html').then(function (h) { return h || caches.match('./'); });
       return Response.error();
     });
+  }));
+});
+
+// Tapping a reminder opens (or focuses) the app
+self.addEventListener('notificationclick', function (e) {
+  e.notification.close();
+  e.waitUntil(self.clients.matchAll({type: 'window', includeUncontrolled: true}).then(function (list) {
+    for (var i = 0; i < list.length; i++) { if ('focus' in list[i]) return list[i].focus(); }
+    return self.clients.openWindow('./');
   }));
 });
