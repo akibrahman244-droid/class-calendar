@@ -65,6 +65,12 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;paddin
 .cls{border-radius:10px;padding:8px 10px;color:var(--ink)}
 .cls .c{font-weight:700;font-size:14px}
 .cls .t,.cls .p{font-size:12px;color:#44526E}
+.cls .class-tools{display:flex;gap:10px;margin-top:6px;align-items:center}
+.cls .class-tools button{font-size:11px;font-weight:700;color:var(--slate-deep);padding:2px 0}
+.cls .class-tools .remove-class{color:var(--rose)}
+.cls .class-tools button:active{opacity:.65}
+:root[data-theme="dark"] .cls .class-tools button{color:#40577B}
+:root[data-theme="dark"] .cls .class-tools .remove-class{color:#B84D68}
 .cls.live{box-shadow:0 0 0 2px var(--teal)}
 
 .ev{position:relative;border-radius:12px;padding:8px 10px;color:var(--ink)}
@@ -838,7 +844,7 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
 
   /* ---------- routine (2024 Series, Section A) ---------- */
   var KEY = 'akib-2024a-class-calendar-v1';
-  var ROUTINE_START = '2026-11-21';
+  var ROUTINE_START = '2026-11-22';
   var ROOM = '2301';
   // period -> [start, end] in minutes from midnight
   var PERIOD = [null, [480,530],[530,580],[580,630],[650,700],[700,750],[750,800],[870,920],[920,970],[970,1020]];
@@ -875,7 +881,7 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
     if (typeof c === 'string') { try { c = JSON.parse(c); } catch (e) { return; } }
     if (!c || !c.routine || !Array.isArray(c.periods)) return;
     var old = COURSE_COLOR, cc = {};
-    ROUTINE_START = c.start || ROUTINE_START; ROOM = c.room || ROOM; PERIOD = c.periods; ROUTINE = c.routine;
+    ROUTINE_START = '2026-11-22'; ROOM = c.room || ROOM; PERIOD = c.periods; ROUTINE = c.routine;
     function add(code) { if (code && !cc[code]) cc[code] = old[code] || PALETTE[Object.keys(cc).length % PALETTE.length]; }
     Object.keys(ROUTINE).forEach(function (d) { ROUTINE[d].forEach(function (r) { add(r[2]); }); });
     ((state && state.events) || []).forEach(function (e) { add(e.course); });
@@ -903,9 +909,13 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
   function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
   function typeOf(id) { return TYPES.filter(function (t) { return t.id === id; })[0] || TYPES[TYPES.length - 1]; }
   function classesFor(d) {
-    if (ymd(d) < ROUTINE_START) return [];
-    return (ROUTINE[d.getDay()] || []).map(function (r) {
-      return {code: r[2], teacher: r[3], start: PERIOD[r[0]][0], end: PERIOD[r[1]][1]};
+    var key = ymd(d);
+    if (key < ROUTINE_START) return [];
+    if (state && state.classOverrides && Object.prototype.hasOwnProperty.call(state.classOverrides, key)) {
+      return state.classOverrides[key].map(function(c){ return Object.assign({}, c); });
+    }
+    return (ROUTINE[d.getDay()] || []).map(function (r, i) {
+      return {id:key + '-' + i, code: r[2], teacher: r[3], start: PERIOD[r[0]][0], end: PERIOD[r[1]][1]};
     });
   }
 
@@ -920,10 +930,10 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
       var raw = localStorage.getItem(KEY);
       if (raw) {
         var o = JSON.parse(raw);
-        if (o && Array.isArray(o.events)) return {events: o.events, showClasses: o.showClasses !== false, cfg: o.cfg, panels: o.panels};
+        if (o && Array.isArray(o.events)) return {events: o.events, showClasses: o.showClasses !== false, cfg: o.cfg, panels: o.panels, classOverrides: o.classOverrides || {}};
       }
     } catch (e) {}
-    return {events: [], showClasses: true};
+    return {events: [], showClasses: true, classOverrides: {}};
   }
   var PENDKEY = KEY + '-pending';
   window.calendarPending = {
@@ -932,29 +942,31 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
   };
   function save() {
     if (window.calendarCloudActive) { try { localStorage.setItem(PENDKEY, String(Date.now()) + '-' + Math.random().toString(36).slice(2, 6)); } catch (e) {} }
-    var payload = {events: state.events, showClasses: state.showClasses, cfg: JSON.stringify(getCfg()), panels: state.panels};
+    var payload = {events: state.events, showClasses: state.showClasses, cfg: JSON.stringify(getCfg()), panels: state.panels, classOverrides: state.classOverrides};
     try { localStorage.setItem(KEY, JSON.stringify(payload)); }
     catch (e) { toast('Could not save in this browser. Use Save backup.'); }
     if (window.calendarCloudSave) window.calendarCloudSave(payload);
   }
   window.applyCloudData = function(payload) {
     if (!payload || !Array.isArray(payload.events)) return;
-    state.events = payload.events; state.showClasses = payload.showClasses !== false; applyCfg(payload.cfg); fillCourses(); setPanels(payload.panels);
-    try { localStorage.setItem(KEY, JSON.stringify({events:state.events,showClasses:state.showClasses,cfg:JSON.stringify(getCfg()),panels:state.panels})); } catch(e) {}
+    state.events = payload.events; state.showClasses = payload.showClasses !== false; state.classOverrides = payload.classOverrides || {}; applyCfg(payload.cfg); fillCourses(); setPanels(payload.panels);
+    try { localStorage.setItem(KEY, JSON.stringify({events:state.events,showClasses:state.showClasses,cfg:JSON.stringify(getCfg()),panels:state.panels,classOverrides:state.classOverrides})); } catch(e) {}
     render();
   };
   window.mergeCalendarData = function(cloud) {
     var have = {}; (cloud.events || []).forEach(function (e) { have[e.id] = 1; });
     var extra = state.events.filter(function (e) { return !have[e.id]; });
     if (!extra.length) return {data: cloud, changed: false};
-    return {data: Object.assign({}, cloud, {events: (cloud.events || []).concat(extra)}), changed: true};
+    var mergedOverrides = Object.assign({}, cloud.classOverrides || {}, state.classOverrides || {});
+    var overridesChanged = JSON.stringify(mergedOverrides) !== JSON.stringify(cloud.classOverrides || {});
+    return {data: Object.assign({}, cloud, {events: (cloud.events || []).concat(extra), classOverrides: mergedOverrides}), changed: extra.length > 0 || overridesChanged};
   };
   window.addEventListener('offline', function () { toast('You are offline. Changes are saved on this device and will sync automatically.'); });
   window.addEventListener('online', function () { toast('Back online. Syncing...'); });
-  window.getCalendarData = function() { return {events:state.events,showClasses:state.showClasses,cfg:JSON.stringify(getCfg()),panels:state.panels}; };
+  window.getCalendarData = function() { return {events:state.events,showClasses:state.showClasses,cfg:JSON.stringify(getCfg()),panels:state.panels,classOverrides:state.classOverrides}; };
 
   var saved = load(); applyCfg(saved.cfg);
-  var state = {view: 'week', cursor: new Date(), events: saved.events, showClasses: saved.showClasses, panels: Object.assign({tasks: false, count: false, v: 2}, saved.panels && saved.panels.v === 2 ? saved.panels : {})};
+  var state = {view: 'week', cursor: new Date(), events: saved.events, showClasses: saved.showClasses, classOverrides: saved.classOverrides || {}, panels: Object.assign({tasks: false, count: false, v: 2}, saved.panels && saved.panels.v === 2 ? saved.panels : {})};
   var widgetMode = new URLSearchParams(location.search).get('widget') === '1';
   if (widgetMode) document.body.classList.add('widget-mode');
   function applyTheme(theme) {
@@ -1037,7 +1049,8 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
       '<div class="t">' + fmtTime(c.start) + '\u2013' + fmtTime(c.end) + '</div>' +
       '<div class="c">' + c.code + '</div>' +
       '<div class="p">' + c.teacher + ', Room ' + ROOM + '</div>' +
-      (live ? '<div class="p"><b>Running now</b></div>' : '') + '</div>';
+      (live ? '<div class="p"><b>Running now</b></div>' : '') +
+      '<div class="class-tools"><button type="button" data-class-edit="' + esc(c.id) + '" data-class-date="' + esc(c.id.slice(0,10)) + '">Edit</button><button type="button" class="remove-class" data-class-remove="' + esc(c.id) + '" data-class-date="' + esc(c.id.slice(0,10)) + '">Cancel</button></div></div>';
   }
   var mq = window.matchMedia('(max-width: 720px)');
   function isMobile() { return mq.matches; }
@@ -1306,6 +1319,29 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
   /* ---------- clicks ---------- */
   function onBoardClick(ev) {
     var t = ev.target;
+    var classEdit = t.closest('[data-class-edit]');
+    if (classEdit) {
+      var dateKey = classEdit.getAttribute('data-class-date'), classId = classEdit.getAttribute('data-class-edit');
+      var day = parse(dateKey), list = classesFor(day), ci = list.findIndex(function(c){return c.id === classId;});
+      if (ci < 0) return;
+      var c = list[ci];
+      var startText = prompt('New start time (24-hour, HH:MM):', pad(Math.floor(c.start/60))+':'+pad(c.start%60));
+      if (startText === null) return;
+      var endText = prompt('New end time (24-hour, HH:MM):', pad(Math.floor(c.end/60))+':'+pad(c.end%60));
+      if (endText === null) return;
+      function toMinutes(v){var m=/^(\\d{1,2}):(\\d{2})$/.exec(v.trim());if(!m||+m[1]>23||+m[2]>59)return null;return +m[1]*60+(+m[2]);}
+      var ns=toMinutes(startText), ne=toMinutes(endText);
+      if(ns===null||ne===null||ne<=ns){toast('Enter a valid time range.');return;}
+      list[ci].start=ns;list[ci].end=ne;state.classOverrides[dateKey]=list;
+      save();render();toast('Class time updated.');return;
+    }
+    var classRemove = t.closest('[data-class-remove]');
+    if (classRemove) {
+      var removeDate=classRemove.getAttribute('data-class-date'), removeId=classRemove.getAttribute('data-class-remove');
+      if(!confirm('Remove this class from this day?')) return;
+      var removeList=classesFor(parse(removeDate)).filter(function(c){return c.id!==removeId;});
+      state.classOverrides[removeDate]=removeList;save();render();toast('Class removed.');return;
+    }
     var sel = t.closest('[data-sel]');
     if (sel) { state.cursor = parse(sel.getAttribute('data-sel')); render(); return; }
     var tick = t.closest('[data-tick]');
