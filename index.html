@@ -1405,10 +1405,12 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/fireba
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
 import { getFirestore, doc, setDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 const firebaseConfig = {
-  apiKey: 'PASTE_YOUR_FIREBASE_API_KEY',
-  authDomain: 'PASTE_YOUR_PROJECT.firebaseapp.com',
-  projectId: 'PASTE_YOUR_PROJECT_ID',
-  appId: 'PASTE_YOUR_APP_ID'
+  apiKey: 'AIzaSyApgjPUA7v13Mjw33YHp2ShhC9VkkrT8bE',
+  authDomain: 'class-calendar-facd5.firebaseapp.com',
+  projectId: 'class-calendar-facd5',
+  storageBucket: 'class-calendar-facd5.firebasestorage.app',
+  messagingSenderId: '1088146278145',
+  appId: '1:1088146278145:web:623e505ffeb5cb76053d00'
 };
 const configured = !Object.values(firebaseConfig).some(v => String(v).startsWith('PASTE_'));
 const $status = t => { const el = document.getElementById('cloudStatus'); if (el) el.textContent = t; };
