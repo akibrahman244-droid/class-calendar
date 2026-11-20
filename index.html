@@ -65,12 +65,16 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;paddin
 .cls{border-radius:10px;padding:8px 10px;color:var(--ink)}
 .cls .c{font-weight:700;font-size:14px}
 .cls .t,.cls .p{font-size:12px;color:#44526E}
-.cls .class-tools{display:flex;gap:10px;margin-top:6px;align-items:center}
-.cls .class-tools button{font-size:11px;font-weight:700;color:var(--slate-deep);padding:2px 0}
-.cls .class-tools .remove-class{color:var(--rose)}
-.cls .class-tools button:active{opacity:.65}
-:root[data-theme="dark"] .cls .class-tools button{color:#40577B}
-:root[data-theme="dark"] .cls .class-tools .remove-class{color:#B84D68}
+.cls{overflow:visible;padding-right:34px}
+.cls{overflow:visible}
+.cls.menu-open{z-index:12}
+.cls .class-menu-trigger{position:absolute;z-index:4;right:6px;top:6px;width:26px;height:26px;border-radius:9px;display:grid;place-items:center;color:var(--ink);background:rgba(255,255,255,.24);border:1px solid rgba(255,255,255,.42);-webkit-backdrop-filter:blur(12px) saturate(1.6);backdrop-filter:blur(12px) saturate(1.6)}
+.cls .class-menu-trigger svg{width:16px;height:16px;fill:currentColor}
+.cls .class-menu{position:absolute;z-index:8;right:6px;top:35px;min-width:158px;padding:5px;border-radius:13px;background:var(--glass-2);border:1px solid var(--glass-brd);box-shadow:var(--hi),0 12px 30px rgba(20,30,60,.24);-webkit-backdrop-filter:blur(24px) saturate(1.8);backdrop-filter:blur(24px) saturate(1.8)}
+.cls .class-menu[hidden]{display:none}
+.cls .class-menu button{display:block;width:100%;text-align:left;padding:9px 10px;border-radius:9px;font-size:12px;font-weight:650;color:var(--ink)}
+.cls .class-menu button:hover{background:rgba(255,255,255,.28)}
+.cls .class-menu .cancel-class-action{color:var(--rose)}
 .cls.live{box-shadow:0 0 0 2px var(--teal)}
 
 .ev{position:relative;border-radius:12px;padding:8px 10px;color:var(--ink)}
@@ -335,6 +339,12 @@ body.widget-mode .widget-panel{display:block;max-width:430px;margin:0 auto;paddi
 .mini{align-self:flex-start;font-size:13px;color:var(--slate-deep);font-weight:600;padding:6px 10px;border-radius:8px;background:rgba(111,130,168,.14)}
 @media(max-width:720px){.rrow{grid-template-columns:52px 52px minmax(0,1fr) 34px}.rrow .tc{order:2;grid-column:1/-1}}
 
+/* vacation dates */
+.vacation-banner,.vacation-pill{display:block;text-align:center;padding:7px 10px;border-radius:10px;background:rgba(63,156,141,.18);border:1px solid rgba(63,156,141,.28);color:var(--teal);font-weight:700;font-size:12px}
+.vacation-pill{margin:3px 0}
+.vacation-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 10px;margin-top:7px;border:1px solid var(--glass-brd);border-radius:12px;background:var(--btn);font-size:12px}
+.vacation-row button{color:var(--rose);font-weight:700;padding:4px 8px}
+#vacationList{margin:8px 0 14px}
 /* ===== liquid glass ===== */
 :root{--glass:rgba(255,255,255,.46);--glass-2:rgba(255,255,255,.70);--glass-brd:rgba(255,255,255,.78);--btn:rgba(255,255,255,.55);
   --hi:inset 0 1px 0 rgba(255,255,255,.9),inset 0 -1px 0 rgba(255,255,255,.18);--sh:0 10px 32px rgba(46,68,120,.14);--f:blur(20px) saturate(1.7)}
@@ -820,7 +830,17 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
 
 <dialog id="rdlg" aria-labelledby="rTitle">
   <form id="rform" autocomplete="off">
-    <h2 id="rTitle" style="margin:0;font-size:18px">Upgrade routine</h2>
+    <h2 id="rTitle" style="margin:0;font-size:18px">Update routine</h2>
+    <section class="routine-panel" style="padding:12px;border:1px solid var(--glass-brd);border-radius:16px;background:var(--glass);margin:12px 0">
+      <h3 style="margin:0 0 6px;font-size:14px">Vacation</h3>
+      <p class="hint">Select your vacation dates. Classes will not appear on these days.</p>
+      <div class="row">
+        <label class="f">From date<input type="date" id="vacStart"></label>
+        <label class="f">To date<input type="date" id="vacEnd"></label>
+      </div>
+      <div class="actions"><button type="button" class="btn primary" id="addVacation">Add vacation</button></div>
+      <div id="vacationList"></div>
+    </section>
     <div class="row">
       <label class="f">Routine starts on<input type="date" id="rStart"></label>
       <label class="f">Room<input type="text" id="rRoom" maxlength="20"></label>
@@ -834,6 +854,17 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
       <button type="submit" class="btn primary">Save routine</button>
     </div>
   </form>
+</dialog>
+<dialog id="classCancelDialog" aria-labelledby="classCancelTitle">
+  <div class="class-confirm" style="padding:22px;display:flex;flex-direction:column;gap:12px">
+    <div style="width:38px;height:38px;border-radius:13px;display:grid;place-items:center;background:rgba(194,80,106,.14);color:var(--rose);font-size:20px">!</div>
+    <h2 id="classCancelTitle" style="margin:0;font-size:18px">Cancel this class?</h2>
+    <p style="margin:0;color:var(--muted);font-size:13px;line-height:1.5">Are you sure you want to cancel this class for this day? This change will not affect other days.</p>
+    <div class="actions" style="margin-top:6px">
+      <button type="button" class="btn" id="keepClass">Keep class</button>
+      <button type="button" class="btn" id="confirmCancelClass" style="color:var(--rose)">Cancel the class</button>
+    </div>
+  </div>
 </dialog>
 <input type="file" id="fileIn" accept="application/json,.json" hidden>
 <div class="toast" id="toast" role="status"></div>
@@ -908,9 +939,12 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
   }
   function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
   function typeOf(id) { return TYPES.filter(function (t) { return t.id === id; })[0] || TYPES[TYPES.length - 1]; }
+  function isVacation(key) {
+    return (state && state.vacations || []).some(function(v){ return key >= v.start && key <= v.end; });
+  }
   function classesFor(d) {
     var key = ymd(d);
-    if (key < ROUTINE_START) return [];
+    if (key < ROUTINE_START || isVacation(key)) return [];
     if (state && state.classOverrides && Object.prototype.hasOwnProperty.call(state.classOverrides, key)) {
       return state.classOverrides[key].map(function(c){ return Object.assign({}, c); });
     }
@@ -930,10 +964,10 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
       var raw = localStorage.getItem(KEY);
       if (raw) {
         var o = JSON.parse(raw);
-        if (o && Array.isArray(o.events)) return {events: o.events, showClasses: o.showClasses !== false, cfg: o.cfg, panels: o.panels, classOverrides: o.classOverrides || {}};
+        if (o && Array.isArray(o.events)) return {events: o.events, showClasses: o.showClasses !== false, cfg: o.cfg, panels: o.panels, classOverrides: o.classOverrides || {}, vacations: o.vacations || []};
       }
     } catch (e) {}
-    return {events: [], showClasses: true, classOverrides: {}};
+    return {events: [], showClasses: true, classOverrides: {}, vacations: []};
   }
   var PENDKEY = KEY + '-pending';
   window.calendarPending = {
@@ -942,31 +976,32 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
   };
   function save() {
     if (window.calendarCloudActive) { try { localStorage.setItem(PENDKEY, String(Date.now()) + '-' + Math.random().toString(36).slice(2, 6)); } catch (e) {} }
-    var payload = {events: state.events, showClasses: state.showClasses, cfg: JSON.stringify(getCfg()), panels: state.panels, classOverrides: state.classOverrides};
+    var payload = {events: state.events, showClasses: state.showClasses, cfg: JSON.stringify(getCfg()), panels: state.panels, classOverrides: state.classOverrides, vacations: state.vacations};
     try { localStorage.setItem(KEY, JSON.stringify(payload)); }
     catch (e) { toast('Could not save in this browser. Use Save backup.'); }
     if (window.calendarCloudSave) window.calendarCloudSave(payload);
   }
   window.applyCloudData = function(payload) {
     if (!payload || !Array.isArray(payload.events)) return;
-    state.events = payload.events; state.showClasses = payload.showClasses !== false; state.classOverrides = payload.classOverrides || {}; applyCfg(payload.cfg); fillCourses(); setPanels(payload.panels);
-    try { localStorage.setItem(KEY, JSON.stringify({events:state.events,showClasses:state.showClasses,cfg:JSON.stringify(getCfg()),panels:state.panels,classOverrides:state.classOverrides})); } catch(e) {}
+    state.events = payload.events; state.showClasses = payload.showClasses !== false; state.classOverrides = payload.classOverrides || {}; state.vacations = payload.vacations || []; applyCfg(payload.cfg); fillCourses(); setPanels(payload.panels);
+    try { localStorage.setItem(KEY, JSON.stringify({events:state.events,showClasses:state.showClasses,cfg:JSON.stringify(getCfg()),panels:state.panels,classOverrides:state.classOverrides,vacations:state.vacations})); } catch(e) {}
     render();
   };
   window.mergeCalendarData = function(cloud) {
     var have = {}; (cloud.events || []).forEach(function (e) { have[e.id] = 1; });
     var extra = state.events.filter(function (e) { return !have[e.id]; });
-    if (!extra.length) return {data: cloud, changed: false};
     var mergedOverrides = Object.assign({}, cloud.classOverrides || {}, state.classOverrides || {});
     var overridesChanged = JSON.stringify(mergedOverrides) !== JSON.stringify(cloud.classOverrides || {});
-    return {data: Object.assign({}, cloud, {events: (cloud.events || []).concat(extra), classOverrides: mergedOverrides}), changed: extra.length > 0 || overridesChanged};
+    var mergedVacations = state.vacations && state.vacations.length ? state.vacations : (cloud.vacations || []);
+    var vacationsChanged = JSON.stringify(mergedVacations) !== JSON.stringify(cloud.vacations || []);
+    return {data: Object.assign({}, cloud, {events: (cloud.events || []).concat(extra), classOverrides: mergedOverrides, vacations: mergedVacations}), changed: extra.length > 0 || overridesChanged || vacationsChanged};
   };
   window.addEventListener('offline', function () { toast('You are offline. Changes are saved on this device and will sync automatically.'); });
   window.addEventListener('online', function () { toast('Back online. Syncing...'); });
-  window.getCalendarData = function() { return {events:state.events,showClasses:state.showClasses,cfg:JSON.stringify(getCfg()),panels:state.panels,classOverrides:state.classOverrides}; };
+  window.getCalendarData = function() { return {events:state.events,showClasses:state.showClasses,cfg:JSON.stringify(getCfg()),panels:state.panels,classOverrides:state.classOverrides,vacations:state.vacations}; };
 
   var saved = load(); applyCfg(saved.cfg);
-  var state = {view: 'week', cursor: new Date(), events: saved.events, showClasses: saved.showClasses, classOverrides: saved.classOverrides || {}, panels: Object.assign({tasks: false, count: false, v: 2}, saved.panels && saved.panels.v === 2 ? saved.panels : {})};
+  var state = {view: 'week', cursor: new Date(), events: saved.events, showClasses: saved.showClasses, classOverrides: saved.classOverrides || {}, vacations: saved.vacations || [], panels: Object.assign({tasks: false, count: false, v: 2}, saved.panels && saved.panels.v === 2 ? saved.panels : {})};
   var widgetMode = new URLSearchParams(location.search).get('widget') === '1';
   if (widgetMode) document.body.classList.add('widget-mode');
   function applyTheme(theme) {
@@ -1050,7 +1085,8 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
       '<div class="c">' + c.code + '</div>' +
       '<div class="p">' + c.teacher + ', Room ' + ROOM + '</div>' +
       (live ? '<div class="p"><b>Running now</b></div>' : '') +
-      '<div class="class-tools"><button type="button" data-class-edit="' + esc(c.id) + '" data-class-date="' + esc(c.id.slice(0,10)) + '">Edit</button><button type="button" class="remove-class" data-class-remove="' + esc(c.id) + '" data-class-date="' + esc(c.id.slice(0,10)) + '">Cancel</button></div></div>';
+      '<button type="button" class="class-menu-trigger" data-class-menu-toggle="' + esc(c.id) + '" data-class-date="' + esc(c.id.slice(0,10)) + '" aria-label="Class options" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>' +
+      '<div class="class-menu" data-class-menu="' + esc(c.id) + '" hidden><button type="button" data-class-edit="' + esc(c.id) + '" data-class-date="' + esc(c.id.slice(0,10)) + '">Class time change</button><button type="button" class="cancel-class-action" data-class-remove="' + esc(c.id) + '" data-class-date="' + esc(c.id.slice(0,10)) + '">Cancel the class</button></div></div>';
   }
   var mq = window.matchMedia('(max-width: 720px)');
   function isMobile() { return mq.matches; }
@@ -1058,15 +1094,17 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
     var k = ymd(d), today = ymd(now);
     var nowMin = now.getHours() * 60 + now.getMinutes();
     var evs = eventsOn(k);
+    var vacation = isVacation(k);
     var cls = state.showClasses ? classesFor(d) : [];
     var html = '<section class="day' + (k === today ? ' today' : '') + (single ? ' single' : '') + '" aria-label="' + DAYS[d.getDay()] + ' ' + d.getDate() + ' ' + MON[d.getMonth()] + '">' +
       '<header class="day-h"><span class="nm">' + DAYS[d.getDay()] + '</span><span class="dt">' + d.getDate() + ' ' + MON[d.getMonth()] + '</span></header>' +
       '<div class="day-b">';
+    if (vacation) html += '<div class="vacation-banner">Vacation</div>';
     var items = [];
     evs.forEach(function (e) { items.push({m: e.time ? +e.time.slice(0, 2) * 60 + +e.time.slice(3, 5) : -1, h: evHtml(e)}); });
     cls.forEach(function (c) { items.push({m: c.start, h: clsHtml(c, k === today && c.start <= nowMin && nowMin < c.end)}); });
     items.sort(function (a, b) { return a.m - b.m; }).forEach(function (i) { html += i.h; });
-    if (!evs.length && !cls.length) html += '<p class="empty">Nothing scheduled</p>';
+    if (!evs.length && !cls.length && !vacation) html += '<p class="empty">Nothing scheduled</p>';
     return html + '</div><button class="add" data-add="' + k + '">+ Add</button></section>';
   }
   function dotsFor(k) {
@@ -1106,9 +1144,11 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
     ORDER.forEach(function (i) { html += '<div class="mh">' + SHORT[i] + '</div>'; });
     for (var d = new Date(start); d <= end; d = addDays(d, 1)) {
       var k = ymd(d), evs = eventsOn(k);
+      var vacation = isVacation(k);
       var nCls = state.showClasses ? classesFor(d).length : 0;
       html += '<div class="mc' + (d.getMonth() !== c.getMonth() ? ' out' : '') + (k === today ? ' today' : '') + '" data-cell="' + k + '">' +
         '<button class="n" data-goto="' + k + '" aria-label="Open week of ' + d.getDate() + ' ' + MON[d.getMonth()] + '">' + d.getDate() + '</button>';
+      if (vacation) html += '<span class="vacation-pill">Vacation</span>';
       evs.slice(0, 3).forEach(function (e) {
         html += '<button class="pill' + (e.done ? ' done' : '') + '" style="background:' + typeOf(e.type).color + '" data-edit="' + e.id + '" title="' + esc(e.title) + '"><span class="pt">' + esc(e.title) + '</span></button>';
       });
@@ -1316,9 +1356,34 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
     save(); dlg.close(); render();
   });
 
+  /* ---------- class cancellation confirmation ---------- */
+  var pendingClassCancel = null;
+  $('keepClass').addEventListener('click', function(){ pendingClassCancel=null; $('classCancelDialog').close(); });
+  $('confirmCancelClass').addEventListener('click', function(){
+    if(!pendingClassCancel) { $('classCancelDialog').close(); return; }
+    var removeDate=pendingClassCancel.date, removeId=pendingClassCancel.id;
+    var removeList=classesFor(parse(removeDate)).filter(function(c){return c.id!==removeId;});
+    state.classOverrides[removeDate]=removeList; save(); pendingClassCancel=null;
+    $('classCancelDialog').close(); render(); toast('Class cancelled for this day.');
+  });
+  $('classCancelDialog').addEventListener('click', function(ev){ if(ev.target === $('classCancelDialog')) { pendingClassCancel=null; $('classCancelDialog').close(); } });
+
   /* ---------- clicks ---------- */
   function onBoardClick(ev) {
     var t = ev.target;
+    var menuToggle = t.closest('[data-class-menu-toggle]');
+    if (menuToggle) {
+      var menuId = menuToggle.getAttribute('data-class-menu-toggle');
+      var menu = t.closest('.cls').querySelector('[data-class-menu="' + menuId + '"]');
+      var willOpen = menu.hidden;
+      document.querySelectorAll('.class-menu').forEach(function(m){m.hidden=true;});
+      document.querySelectorAll('.cls').forEach(function(card){card.classList.remove('menu-open');});
+      document.querySelectorAll('[data-class-menu-toggle]').forEach(function(b){b.setAttribute('aria-expanded','false');});
+      menu.hidden = !willOpen;
+      if(willOpen) t.closest('.cls').classList.add('menu-open');
+      menuToggle.setAttribute('aria-expanded', String(willOpen));
+      return;
+    }
     var classEdit = t.closest('[data-class-edit]');
     if (classEdit) {
       var dateKey = classEdit.getAttribute('data-class-date'), classId = classEdit.getAttribute('data-class-edit');
@@ -1337,10 +1402,10 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
     }
     var classRemove = t.closest('[data-class-remove]');
     if (classRemove) {
-      var removeDate=classRemove.getAttribute('data-class-date'), removeId=classRemove.getAttribute('data-class-remove');
-      if(!confirm('Remove this class from this day?')) return;
-      var removeList=classesFor(parse(removeDate)).filter(function(c){return c.id!==removeId;});
-      state.classOverrides[removeDate]=removeList;save();render();toast('Class removed.');return;
+      pendingClassCancel = {date:classRemove.getAttribute('data-class-date'), id:classRemove.getAttribute('data-class-remove')};
+      document.querySelectorAll('.class-menu').forEach(function(m){m.hidden=true;});
+      $('classCancelDialog').showModal();
+      return;
     }
     var sel = t.closest('[data-sel]');
     if (sel) { state.cursor = parse(sel.getAttribute('data-sel')); render(); return; }
@@ -1363,6 +1428,12 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
   }
   $('board').addEventListener('click', onBoardClick);
   $('widgetPanel').addEventListener('click', onBoardClick);
+  document.addEventListener('click', function(ev){
+    if(ev.target.closest('.cls')) return;
+    document.querySelectorAll('.class-menu').forEach(function(m){m.hidden=true;});
+    document.querySelectorAll('.cls').forEach(function(card){card.classList.remove('menu-open');});
+    document.querySelectorAll('[data-class-menu-toggle]').forEach(function(b){b.setAttribute('aria-expanded','false');});
+  });
 
   ['searchText','filterType','filterCourse','filterDate'].forEach(function(id){
     $(id).addEventListener(id==='searchText'?'input':'change', function(){renderSide(new Date());});
@@ -1483,7 +1554,25 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
     if (del) del.closest('.rrow').remove();
     if (add) add.parentNode.querySelector('.rrows').insertAdjacentHTML('beforeend', rowHtml([1, 1, '', '']));
   });
-  $('routineBtn').addEventListener('click', function () { setMenu(false); buildRoutineForm(getCfg()); rdlg.showModal(); });
+  function renderVacationList() {
+    $('vacationList').innerHTML = (state.vacations || []).map(function(v,i) {
+      return '<div class="vacation-row"><span>' + esc(v.start) + ' → ' + esc(v.end) + '</span><button type="button" data-vac-remove="' + i + '">Remove</button></div>';
+    }).join('') || '<p class="hint">No vacation dates added.</p>';
+  }
+  $('addVacation').addEventListener('click',function(){
+    var a=$('vacStart').value,b=$('vacEnd').value;
+    if(!a||!b||b<a){toast('Select a valid vacation date range.');return;}
+    state.vacations = state.vacations || [];
+    state.vacations.push({start:a,end:b});
+    state.vacations.sort(function(x,y){return x.start.localeCompare(y.start);});
+    save();renderVacationList();render();toast('Vacation dates added.');
+    $('vacStart').value='';$('vacEnd').value='';
+  });
+  $('vacationList').addEventListener('click',function(ev){
+    var btn=ev.target.closest('[data-vac-remove]');if(!btn)return;
+    state.vacations.splice(+btn.getAttribute('data-vac-remove'),1);save();renderVacationList();render();toast('Vacation removed.');
+  });
+  $('routineBtn').addEventListener('click', function () { setMenu(false); buildRoutineForm(getCfg()); renderVacationList(); rdlg.showModal(); });
   $('rCancel').addEventListener('click', function () { rdlg.close(); });
   $('rReset').addEventListener('click', function () {
     if (confirm('Reset the routine to the original one?')) buildRoutineForm(JSON.parse(JSON.stringify(DEFAULT_CFG)));
