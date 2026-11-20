@@ -600,19 +600,54 @@ body.can-install:not(.widget-mode) .top>div:first-child{padding-right:104px}
 .bdg-mono{width:28px;height:28px;border-radius:0;overflow:visible;background:none}
 .bdg-mono img{width:28px;height:28px;display:block;filter:drop-shadow(0 1px 1px rgba(255,255,255,.55))}
 :root[data-theme="dark"] .bdg-mono img{background:rgba(254,248,239,.92);border-radius:9px;padding:1px;filter:none}
-#loader{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:#FEF8EF;opacity:1;transition:opacity .45s ease,visibility .45s ease}
+#loader{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(237,241,248,.50);-webkit-backdrop-filter:blur(26px) saturate(1.7);backdrop-filter:blur(26px) saturate(1.7);opacity:1;transition:opacity .5s ease,visibility .5s ease}
+:root[data-theme="dark"] #loader{background:rgba(17,23,34,.55)}
 #loader.hide{opacity:0;visibility:hidden;pointer-events:none}
-#loader img{width:min(78vw,420px);height:auto;display:block;animation:ldIn .7s ease both}
-#loader .ld-bar{position:absolute;left:50%;bottom:calc(9% + env(safe-area-inset-bottom));width:96px;height:3px;margin-left:-48px;border-radius:3px;background:rgba(200,155,60,.22);overflow:hidden}
-#loader .ld-bar::after{content:"";position:absolute;inset:0;width:40%;border-radius:3px;background:#C9962F;animation:ldBar 1.1s ease-in-out infinite}
+#loader img{width:min(68vw,340px);height:auto;display:block;animation:ldIn .7s ease both;filter:drop-shadow(0 10px 24px rgba(20,30,60,.14))}
+:root[data-theme="dark"] #loader img{filter:invert(.92) hue-rotate(180deg) drop-shadow(0 10px 24px rgba(0,0,0,.35))}
+#loader .ld-bar{position:absolute;left:50%;bottom:calc(9% + env(safe-area-inset-bottom));width:96px;height:3px;margin-left:-48px;border-radius:3px;background:var(--glass-brd,rgba(255,255,255,.6));overflow:hidden}
+#loader .ld-bar::after{content:"";position:absolute;inset:0;width:40%;border-radius:3px;background:var(--teal,#3F9C8D);animation:ldBar 1.1s ease-in-out infinite}
 @keyframes ldIn{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:none}}
 @keyframes ldBar{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}
 @media (prefers-reduced-motion:reduce){#loader img,#loader .ld-bar::after{animation:none}}
+
+/* ===== month view fix: readable event pills on PC + class count on phone ===== */
+.mc{min-width:0;align-content:flex-start}
+.mc .pill{display:block;flex:none;width:100%;height:auto;min-height:20px;line-height:1.35;padding:2px 8px;margin:0;color:#1B2A41;font-size:12px;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mc .pill .pt{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:inherit}
+.mc .more{flex:none}
+.mc .cc{flex:none;align-self:flex-start;display:inline-flex;align-items:baseline;gap:2px;font-size:11px;font-weight:600;line-height:1.3;padding:1px 8px;border-radius:999px;background:rgba(63,156,141,.16);color:var(--slate-deep)}
+:root[data-theme="dark"] .mc .cc{color:var(--ink);background:rgba(63,156,141,.28)}
+.mc .mdots{flex:none}
+@media (max-width:720px){
+  .mc{min-height:70px;gap:2px;justify-content:flex-start}
+  .mc .cc{display:inline-flex;align-self:center;font-size:10px;padding:1px 6px;margin-top:1px}
+  .mc .cc .ccw{display:none}
+  .mc .cc b{font-weight:700}
+  .mc .cc::after{content:" cls"}
+  .mc .mdots{display:flex;min-height:6px}
+}
+
+.mchips{display:none}
+@media (max-width:720px){
+  .mc{min-height:78px}
+  .mc .mdots{display:none}
+  .mc .mchips{display:flex;flex-direction:column;align-items:stretch;gap:2px;width:100%}
+  .mchips i{font-style:normal;font-size:9px;font-weight:700;line-height:1.2;padding:1px 2px;border-radius:4px;text-align:center;color:#1B2A41;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mchips em{font-style:normal;font-size:9px;color:var(--muted);text-align:center;line-height:1.1}
+}
 </style>
 </head>
 <body>
-<div id="loader" role="status" aria-label="Loading"><img src="loading-logo.jpg" alt="Class Calendar" width="420" height="420"><div class="ld-bar"></div></div>
-<script>(function(){var t0=Date.now(),d=document.getElementById('loader');function hide(){if(!d||d.classList.contains('hide'))return;d.classList.add('hide');setTimeout(function(){if(d.parentNode)d.parentNode.removeChild(d)},600)}function done(){setTimeout(hide,Math.max(0,1500-(Date.now()-t0)))}if(document.readyState==='complete')done();else window.addEventListener('load',done);setTimeout(hide,5000)})();</script>
+<div id="loader" role="status" aria-label="Loading"><img src="loading-logo.png" alt="Class Calendar" width="340" height="340"><div class="ld-bar"></div></div>
+<script>(function(){var d=document.getElementById('loader');if(!d)return;
+try{if(localStorage.getItem('akib-calendar-theme')==='dark')document.documentElement.setAttribute('data-theme','dark')}catch(e){}
+var standalone=false;try{standalone=(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||window.navigator.standalone===true}catch(e){}
+/* installed app: the phone already shows the logo splash, so skip a second logo screen */
+if(standalone){d.parentNode.removeChild(d);return}
+var t0=Date.now();function hide(){if(d.classList.contains('hide'))return;d.classList.add('hide');setTimeout(function(){if(d.parentNode)d.parentNode.removeChild(d)},700)}
+function done(){setTimeout(hide,Math.max(0,1200-(Date.now()-t0)))}
+if(document.readyState==='complete')done();else window.addEventListener('load',done);setTimeout(hide,5000)})();</script>
 
 <header class="top">
   <div>
@@ -970,6 +1005,14 @@ body.can-install:not(.widget-mode) .top>div:first-child{padding-right:104px}
   }
 
   /* ---------- month view ---------- */
+  var SHORTLBL = {ct:'CT', quiz:'Quiz', assignment:'Asg', lab:'Lab', exam:'Exam', other:'Other'};
+  function chipsFor(evs) {
+    var h = evs.slice(0, 2).map(function (e) {
+      return '<i style="background:' + typeOf(e.type).color + '">' + (SHORTLBL[e.type] || 'Other') + '</i>';
+    }).join('');
+    if (evs.length > 2) h += '<em>+' + (evs.length - 2) + '</em>';
+    return h;
+  }
   function renderMonth(now) {
     var c = state.cursor, today = ymd(now);
     var first = new Date(c.getFullYear(), c.getMonth(), 1);
@@ -983,11 +1026,11 @@ body.can-install:not(.widget-mode) .top>div:first-child{padding-right:104px}
       html += '<div class="mc' + (d.getMonth() !== c.getMonth() ? ' out' : '') + (k === today ? ' today' : '') + '" data-cell="' + k + '">' +
         '<button class="n" data-goto="' + k + '" aria-label="Open week of ' + d.getDate() + ' ' + MON[d.getMonth()] + '">' + d.getDate() + '</button>';
       evs.slice(0, 3).forEach(function (e) {
-        html += '<button class="pill' + (e.done ? ' done' : '') + '" style="background:' + typeOf(e.type).color + '" data-edit="' + e.id + '">' + esc(e.title) + '</button>';
+        html += '<button class="pill' + (e.done ? ' done' : '') + '" style="background:' + typeOf(e.type).color + '" data-edit="' + e.id + '" title="' + esc(e.title) + '"><span class="pt">' + esc(e.title) + '</span></button>';
       });
       if (evs.length > 3) html += '<span class="more">+' + (evs.length - 3) + ' more</span>';
-      if (nCls) html += '<span class="cc">' + nCls + (nCls === 1 ? ' class' : ' classes') + '</span>';
-      html += '<span class="mdots">' + dotsFor(k) + '</span></div>';
+      if (nCls) html += '<span class="cc"><b>' + nCls + '</b><span class="ccw">' + (nCls === 1 ? ' class' : ' classes') + '</span></span>';
+      html += '<span class="mchips">' + chipsFor(evs) + '</span></div>';
     }
     return html + '</div>';
   }
