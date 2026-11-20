@@ -704,13 +704,9 @@ body.widget-mode .np,body.widget-mode .np-backdrop{display:none}
 @keyframes nbOut{to{opacity:0;transform:translateY(-18px) scale(.97)}}
 @media(prefers-reduced-motion:reduce){.nb,.nb.out{animation:none}}
 
-/* Class action menu: let the complete dropdown escape the card/day clipping. */
-.day{overflow:visible !important}
-.day.menu-open{position:relative;z-index:40;overflow:visible !important}
-.day.menu-open .cls.menu-open{position:relative;z-index:41;overflow:visible !important}
-.cls,.cls.menu-open{overflow:visible !important}
-.cls .class-menu{z-index:100;min-width:190px;max-width:min(240px,calc(100vw - 48px));top:35px}
-.cls .class-menu button{white-space:normal;min-height:40px}
+/* Dropdown is portaled to body while open, so day cards keep their original rounded clipping. */
+.class-menu.menu-portal{position:fixed !important;z-index:99999 !important;right:auto !important;top:auto !important;left:0;min-width:190px;max-width:min(240px,calc(100vw - 24px));}
+.class-menu.menu-portal button{white-space:normal;min-height:40px}
 
 </style>
 </head>
@@ -1383,19 +1379,30 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
     var menuToggle = t.closest('[data-class-menu-toggle]');
     if (menuToggle) {
       var menuId = menuToggle.getAttribute('data-class-menu-toggle');
-      var menu = t.closest('.cls').querySelector('[data-class-menu="' + menuId + '"]');
+      var card = t.closest('.cls');
+      var menu = card.querySelector('[data-class-menu="' + menuId + '"]');
       var willOpen = menu.hidden;
-      document.querySelectorAll('.class-menu').forEach(function(m){m.hidden=true;});
-      document.querySelectorAll('.cls').forEach(function(card){card.classList.remove('menu-open');});
-      document.querySelectorAll('.day').forEach(function(day){day.classList.remove('menu-open');});
-      document.querySelectorAll('[data-class-menu-toggle]').forEach(function(b){b.setAttribute('aria-expanded','false');});
-      menu.hidden = !willOpen;
-      if(willOpen) { t.closest('.cls').classList.add('menu-open'); t.closest('.day').classList.add('menu-open'); }
-      menuToggle.setAttribute('aria-expanded', String(willOpen));
+      closeAllClassMenus();
+      if(willOpen) {
+        var triggerRect = menuToggle.getBoundingClientRect();
+        menu._homeParent = menu.parentNode;
+        menu._homeNext = menu.nextSibling;
+        document.body.appendChild(menu);
+        menu.classList.add('menu-portal');
+        menu.hidden = false;
+        var menuWidth = Math.min(240, window.innerWidth - 24);
+        var left = Math.max(12, Math.min(window.innerWidth - menuWidth - 12, triggerRect.right - menuWidth));
+        var top = triggerRect.bottom + 8;
+        menu.style.left = left + 'px';
+        menu.style.top = top + 'px';
+        card.classList.add('menu-open');
+        menuToggle.setAttribute('aria-expanded', 'true');
+      }
       return;
     }
     var classEdit = t.closest('[data-class-edit]');
     if (classEdit) {
+      closeAllClassMenus();
       var dateKey = classEdit.getAttribute('data-class-date'), classId = classEdit.getAttribute('data-class-edit');
       var day = parse(dateKey), list = classesFor(day), ci = list.findIndex(function(c){return c.id === classId;});
       if (ci < 0) return;
@@ -1412,6 +1419,7 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
     }
     var classRemove = t.closest('[data-class-remove]');
     if (classRemove) {
+      closeAllClassMenus();
       pendingClassCancel = {date:classRemove.getAttribute('data-class-date'), id:classRemove.getAttribute('data-class-remove')};
       document.querySelectorAll('.class-menu').forEach(function(m){m.hidden=true;});
       $('classCancelDialog').showModal();
@@ -1436,15 +1444,28 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
       else openDlg({date: cell.getAttribute('data-cell')});
     }
   }
-  $('board').addEventListener('click', onBoardClick);
-  $('widgetPanel').addEventListener('click', onBoardClick);
-  document.addEventListener('click', function(ev){
-    if(ev.target.closest('.cls')) return;
-    document.querySelectorAll('.class-menu').forEach(function(m){m.hidden=true;});
+  function restoreClassMenu(menu) {
+    if(!menu) return;
+    if(menu._homeParent) {
+      menu.classList.remove('menu-portal');
+      menu.style.left=''; menu.style.top='';
+      if(menu._homeNext && menu._homeNext.parentNode === menu._homeParent) menu._homeParent.insertBefore(menu, menu._homeNext);
+      else menu._homeParent.appendChild(menu);
+      menu._homeParent=null; menu._homeNext=null;
+    }
+    menu.hidden=true;
+  }
+  function closeAllClassMenus() {
+    document.querySelectorAll('.class-menu').forEach(restoreClassMenu);
     document.querySelectorAll('.cls').forEach(function(card){card.classList.remove('menu-open');});
-    document.querySelectorAll('.day').forEach(function(day){day.classList.remove('menu-open');});
     document.querySelectorAll('[data-class-menu-toggle]').forEach(function(b){b.setAttribute('aria-expanded','false');});
+  }
+  document.addEventListener('click', onBoardClick);
+  document.addEventListener('click', function(ev){
+    if(ev.target.closest('.cls') || ev.target.closest('.class-menu')) return;
+    closeAllClassMenus();
   });
+  document.addEventListener('keydown', function(ev){ if(ev.key === 'Escape') closeAllClassMenus(); });
 
   ['searchText','filterType','filterCourse','filterDate'].forEach(function(id){
     $(id).addEventListener(id==='searchText'?'input':'change', function(){renderSide(new Date());});
@@ -1953,3 +1974,14 @@ if (configured) {
 
 </body>
 </html>
+
+
+/* dark-mode class options: keep the three-dot control distinct on pastel class cards */
+:root[data-theme="dark"] .cls .class-menu-trigger{
+  color:#26364B !important;
+  background:rgba(255,255,255,.82) !important;
+  border:1px solid rgba(38,54,75,.22) !important;
+  box-shadow:0 2px 8px rgba(0,0,0,.16),inset 0 1px 0 rgba(255,255,255,.9);
+}
+:root[data-theme="dark"] .cls .class-menu-trigger svg{fill:#26364B !important;}
+:root[data-theme="dark"] .cls .class-menu-trigger:focus-visible{outline:2px solid #8FB5F0;outline-offset:2px;}
