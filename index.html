@@ -1435,26 +1435,38 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
     if (!t || typeof t.closest !== 'function') return;
     var menuToggle = t.closest('[data-class-menu-toggle]');
     if (menuToggle) {
+      ev.preventDefault();
+      ev.stopPropagation();
+
       var menuId = menuToggle.getAttribute('data-class-menu-toggle');
-      var card = t.closest('.cls');
-      var menu = card.querySelector('[data-class-menu="' + menuId + '"]');
-      var willOpen = menu.hidden;
+      var card = menuToggle.closest('.cls');
+      /* The menu may already be portaled to body, so never search only inside the card. */
+      var menu = Array.prototype.find.call(
+        document.querySelectorAll('.class-menu'),
+        function(el){ return el.getAttribute('data-class-menu') === menuId; }
+      );
+      if (!card || !menu) return;
+
+      var wasOpen = !menu.hidden && menu.classList.contains('menu-portal');
       closeAllClassMenus();
-      if(willOpen) {
+
+      if (!wasOpen) {
         var triggerRect = menuToggle.getBoundingClientRect();
         menu._homeParent = menu.parentNode;
         menu._homeNext = menu.nextSibling;
         document.body.appendChild(menu);
         menu.classList.add('menu-portal');
         menu.hidden = false;
+
         var menuWidth = Math.min(240, window.innerWidth - 24);
         var left = Math.max(12, Math.min(window.innerWidth - menuWidth - 12, triggerRect.right - menuWidth));
-        var menuHeight = menu.offsetHeight || 100;
+        menu.style.left = left + 'px';
+
+        var menuHeight = menu.getBoundingClientRect().height || 100;
         var top = triggerRect.bottom + 8;
         if (top + menuHeight > window.innerHeight - 12) {
           top = Math.max(12, triggerRect.top - menuHeight - 8);
         }
-        menu.style.left = left + 'px';
         menu.style.top = top + 'px';
         card.classList.add('menu-open');
         menuToggle.setAttribute('aria-expanded', 'true');
@@ -1521,9 +1533,10 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
     document.querySelectorAll('.cls').forEach(function(card){card.classList.remove('menu-open');});
     document.querySelectorAll('[data-class-menu-toggle]').forEach(function(b){b.setAttribute('aria-expanded','false');});
   }
-  document.addEventListener('click', onBoardClick);
+  document.addEventListener('click', onBoardClick, true);
   document.addEventListener('click', function(ev){
-    if(ev.target.closest('.cls') || ev.target.closest('.class-menu')) return;
+    if(ev.target && typeof ev.target.closest === 'function' &&
+       (ev.target.closest('.cls') || ev.target.closest('.class-menu'))) return;
     closeAllClassMenus();
   });
   document.addEventListener('keydown', function(ev){ if(ev.key === 'Escape') closeAllClassMenus(); });
