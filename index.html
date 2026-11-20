@@ -708,6 +708,62 @@ body.widget-mode .np,body.widget-mode .np-backdrop{display:none}
 .class-menu.menu-portal{position:fixed !important;z-index:99999 !important;right:auto !important;top:auto !important;left:0;min-width:190px;max-width:min(240px,calc(100vw - 24px));}
 .class-menu.menu-portal button{white-space:normal;min-height:40px}
 
+
+/* Portaled class menu: these rules must not depend on .cls ancestry. */
+.class-menu.menu-portal{
+  position:fixed !important;
+  z-index:99999 !important;
+  right:auto !important;
+  top:auto !important;
+  left:0;
+  min-width:190px;
+  max-width:min(240px,calc(100vw - 24px));
+  padding:6px;
+  border-radius:14px;
+  color:var(--ink);
+  background:var(--glass-2,var(--panel));
+  border:1px solid var(--glass-brd,var(--line));
+  box-shadow:0 12px 34px rgba(0,0,0,.28);
+  -webkit-backdrop-filter:blur(24px) saturate(1.8);
+  backdrop-filter:blur(24px) saturate(1.8);
+  pointer-events:auto;
+}
+.class-menu.menu-portal[hidden]{display:none !important}
+.class-menu.menu-portal button{
+  display:block;
+  width:100%;
+  min-height:42px;
+  padding:10px 12px;
+  border:0;
+  border-radius:10px;
+  text-align:left;
+  white-space:normal;
+  font:650 13px/1.35 var(--font);
+  color:var(--ink);
+  background:transparent;
+  cursor:pointer;
+  pointer-events:auto;
+}
+.class-menu.menu-portal button:hover{background:rgba(127,145,180,.18)}
+.class-menu.menu-portal .cancel-class-action{color:var(--rose)}
+
+/* High-contrast three-dot control in dark mode. */
+:root[data-theme="dark"] .cls .class-menu-trigger{
+  color:#26364B !important;
+  background:rgba(255,255,255,.94) !important;
+  border:1px solid rgba(255,255,255,.95) !important;
+  box-shadow:0 2px 9px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.95);
+  opacity:1 !important;
+}
+:root[data-theme="dark"] .cls .class-menu-trigger svg{
+  fill:#26364B !important;
+  opacity:1 !important;
+}
+:root[data-theme="dark"] .cls .class-menu-trigger:focus-visible{
+  outline:2px solid #8FB5F0;
+  outline-offset:2px;
+}
+
 </style>
 </head>
 <body>
@@ -1376,6 +1432,7 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
   /* ---------- clicks ---------- */
   function onBoardClick(ev) {
     var t = ev.target;
+    if (!t || typeof t.closest !== 'function') return;
     var menuToggle = t.closest('[data-class-menu-toggle]');
     if (menuToggle) {
       var menuId = menuToggle.getAttribute('data-class-menu-toggle');
@@ -1392,7 +1449,11 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
         menu.hidden = false;
         var menuWidth = Math.min(240, window.innerWidth - 24);
         var left = Math.max(12, Math.min(window.innerWidth - menuWidth - 12, triggerRect.right - menuWidth));
+        var menuHeight = menu.offsetHeight || 100;
         var top = triggerRect.bottom + 8;
+        if (top + menuHeight > window.innerHeight - 12) {
+          top = Math.max(12, triggerRect.top - menuHeight - 8);
+        }
         menu.style.left = left + 'px';
         menu.style.top = top + 'px';
         card.classList.add('menu-open');
@@ -1975,13 +2036,3 @@ if (configured) {
 </body>
 </html>
 
-
-/* dark-mode class options: keep the three-dot control distinct on pastel class cards */
-:root[data-theme="dark"] .cls .class-menu-trigger{
-  color:#26364B !important;
-  background:rgba(255,255,255,.82) !important;
-  border:1px solid rgba(38,54,75,.22) !important;
-  box-shadow:0 2px 8px rgba(0,0,0,.16),inset 0 1px 0 rgba(255,255,255,.9);
-}
-:root[data-theme="dark"] .cls .class-menu-trigger svg{fill:#26364B !important;}
-:root[data-theme="dark"] .cls .class-menu-trigger:focus-visible{outline:2px solid #8FB5F0;outline-offset:2px;}
