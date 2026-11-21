@@ -1067,8 +1067,8 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
   var COURSES = Object.keys(COURSE_COLOR);
   // JS getDay(): 6 Sat, 0 Sun, 1 Mon, 2 Tue, 3 Wed.  [firstPeriod, lastPeriod, course, teacher]
   var ROUTINE = {
-    6: [[1,3,'CE 2252','MNB/MAW/SH'],[4,4,'Math 2201','MNS'],[5,5,'Hum 2201','KF']],
-    0: [[3,3,'Math 2201','MAH'],[4,4,'CE 2213','MZI'],[5,5,'CE 2203','KZ(1)'],[6,6,'CE 2201','MRI']],
+    6: [[1,3,'CE 2252','MNB/MAW/SH'],[4,4,'Math 2201','MNS'],[5,5,'Hum 2201','KF'],[6,6,'CE 2213','MZI']],
+    0: [[3,3,'Math 2201','MAH'],[5,5,'CE 2203','KZ(1)'],[6,6,'CE 2201','MRI']],
     1: [[4,4,'CE 2213','MZI'],[5,5,'CE 2201','MRI'],[6,6,'Math 2201','MAH'],[7,9,'CE 2220','ASMZH/MDA/ASD']],
     2: [[3,3,'Hum 2201','MMP'],[4,4,'CE 2213','MKZ'],[5,5,'CE 2201','ST'],[7,9,'CE 2214','MZI']],
     3: [[1,3,'CE 2202','ST/SRP/ASD'],[5,5,'CE 2203','BR'],[6,6,'CE 2201','ST']]
@@ -1087,11 +1087,13 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
   var SHORT = DAYS.map(function (d) { return d.slice(0, 3); });
   var ORDER = [6,0,1,2,3,4,5]; // week starts on Saturday
   var DEFAULT_CFG = JSON.parse(JSON.stringify({start: ROUTINE_START, room: ROOM, periods: PERIOD, routine: ROUTINE}));
+  var OLD_ROUTINE_JSON = JSON.stringify({6:[[1,3,'CE 2252','MNB/MAW/SH'],[4,4,'Math 2201','MNS'],[5,5,'Hum 2201','KF']],0:[[3,3,'Math 2201','MAH'],[4,4,'CE 2213','MZI'],[5,5,'CE 2203','KZ(1)'],[6,6,'CE 2201','MRI']],1:[[4,4,'CE 2213','MZI'],[5,5,'CE 2201','MRI'],[6,6,'Math 2201','MAH'],[7,9,'CE 2220','ASMZH/MDA/ASD']],2:[[3,3,'Hum 2201','MMP'],[4,4,'CE 2213','MKZ'],[5,5,'CE 2201','ST'],[7,9,'CE 2214','MZI']],3:[[1,3,'CE 2202','ST/SRP/ASD'],[5,5,'CE 2203','BR'],[6,6,'CE 2201','ST']]});
   var PALETTE = ['#BFD7F2','#BEE6DD','#D6CCEF','#F8D9C2','#F4C9D6','#CDE7C8','#E6D8C3','#D3D9E3','#C7CEF0','#F7E3A6','#B8E3EA','#E8C6E8'];
   function getCfg() { return {start: ROUTINE_START, room: ROOM, periods: PERIOD, routine: ROUTINE}; }
   function applyCfg(c) {
     if (typeof c === 'string') { try { c = JSON.parse(c); } catch (e) { return; } }
     if (!c || !c.routine || !Array.isArray(c.periods)) return;
+    if (JSON.stringify(c.routine) === OLD_ROUTINE_JSON) c = {start: DEFAULT_CFG.start, room: c.room, periods: c.periods, routine: JSON.parse(JSON.stringify(DEFAULT_CFG.routine))};
     var old = COURSE_COLOR, cc = {};
     ROUTINE_START = '2026-11-22'; ROOM = c.room || ROOM; PERIOD = c.periods; ROUTINE = c.routine;
     function add(code) { if (code && !cc[code]) cc[code] = old[code] || PALETTE[Object.keys(cc).length % PALETTE.length]; }
