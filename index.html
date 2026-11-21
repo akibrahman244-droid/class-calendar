@@ -705,7 +705,7 @@ body.widget-mode .np,body.widget-mode .np-backdrop{display:none}
 @media(prefers-reduced-motion:reduce){.nb,.nb.out{animation:none}}
 
 /* Dropdown is portaled to body while open, so day cards keep their original rounded clipping. */
-.class-menu.menu-portal{position:fixed !important;z-index:99999 !important;right:auto !important;top:auto !important;left:0;min-width:190px;max-width:min(240px,calc(100vw - 24px));}
+.class-menu.menu-portal{position:fixed !important;z-index:99999 !important;right:auto !important;left:0;min-width:190px;max-width:min(240px,calc(100vw - 24px));}
 .class-menu.menu-portal button{white-space:normal;min-height:40px}
 
 
@@ -714,7 +714,7 @@ body.widget-mode .np,body.widget-mode .np-backdrop{display:none}
   position:fixed !important;
   z-index:99999 !important;
   right:auto !important;
-  top:auto !important;
+  
   left:0;
   min-width:190px;
   max-width:min(240px,calc(100vw - 24px));
@@ -764,6 +764,21 @@ body.widget-mode .np,body.widget-mode .np-backdrop{display:none}
   outline-offset:2px;
 }
 
+
+/* ===== v6: class menu pop + glass day cards ===== */
+.class-menu.menu-portal:not([hidden]){transform-origin:top right;animation:cmPop .18s ease-out}
+@keyframes cmPop{from{opacity:0;transform:scale(.94) translateY(-4px)}to{opacity:1;transform:none}}
+:root:not(#g) .day{background:linear-gradient(160deg,rgba(255,255,255,.60),rgba(255,255,255,.22) 58%,rgba(255,255,255,.42));border:1px solid rgba(255,255,255,.78);box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 12px 32px rgba(46,68,120,.14);-webkit-backdrop-filter:blur(20px) saturate(1.7);backdrop-filter:blur(20px) saturate(1.7)}
+:root:not(#g) .day.today{background:linear-gradient(160deg,rgba(255,255,255,.58),rgba(63,156,141,.20) 58%,rgba(255,255,255,.38))}
+:root:not(#g) .day-h{background:linear-gradient(180deg,rgba(255,255,255,.72),rgba(255,255,255,.26)),rgba(111,130,168,.30);color:var(--ink);text-shadow:none;border-bottom:1px solid rgba(255,255,255,.75);box-shadow:inset 0 1px 0 rgba(255,255,255,.95);-webkit-backdrop-filter:blur(16px) saturate(1.6);backdrop-filter:blur(16px) saturate(1.6)}
+:root:not(#g) .day.today .day-h{background:linear-gradient(180deg,rgba(255,255,255,.66),rgba(255,255,255,.20)),rgba(63,156,141,.44)}
+:root:not(#g) .day-h .dt{opacity:.75}
+:root:not([data-theme="dark"]):not(#g) .cls{background:linear-gradient(135deg,color-mix(in srgb,var(--c) 80%,transparent),color-mix(in srgb,var(--c) 50%,transparent));border:1px solid rgba(255,255,255,.8);box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 6px 16px rgba(46,68,120,.12);-webkit-backdrop-filter:blur(10px) saturate(1.5);backdrop-filter:blur(10px) saturate(1.5)}
+:root:not([data-theme="dark"]):not(#g) .cls.live{box-shadow:0 0 0 2px var(--teal),inset 0 1px 0 rgba(255,255,255,.95),0 6px 16px rgba(46,68,120,.12)}
+:root[data-theme="dark"]:not(#g) .day{background:linear-gradient(160deg,rgba(255,255,255,.13),rgba(255,255,255,.04) 58%,rgba(255,255,255,.09));border:1px solid rgba(255,255,255,.16);box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 12px 32px rgba(0,0,0,.38);-webkit-backdrop-filter:blur(20px) saturate(1.6);backdrop-filter:blur(20px) saturate(1.6)}
+:root[data-theme="dark"]:not(#g) .day.today{background:linear-gradient(160deg,rgba(255,255,255,.12),rgba(63,156,141,.18) 58%,rgba(255,255,255,.07))}
+:root[data-theme="dark"]:not(#g) .day-h{background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,.04)),rgba(96,122,165,.34);color:var(--ink);border-bottom:1px solid rgba(255,255,255,.16);box-shadow:inset 0 1px 0 rgba(255,255,255,.22)}
+:root[data-theme="dark"]:not(#g) .day.today .day-h{background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.04)),rgba(63,156,141,.42)}
 </style>
 </head>
 <body>
@@ -924,6 +939,21 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
     <div class="actions" style="margin-top:6px">
       <button type="button" class="btn" id="keepClass">Keep class</button>
       <button type="button" class="btn" id="confirmCancelClass" style="color:var(--rose)">Cancel the class</button>
+    </div>
+  </div>
+</dialog>
+<dialog id="classTimeDialog" aria-labelledby="classTimeTitle">
+  <div class="class-confirm" style="padding:22px;display:flex;flex-direction:column;gap:12px">
+    <div style="width:38px;height:38px;border-radius:13px;display:grid;place-items:center;background:rgba(63,156,141,.16);color:var(--teal)"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+    <h2 id="classTimeTitle" style="margin:0;font-size:18px">Change class time</h2>
+    <p id="ctInfo" style="margin:0;color:var(--muted);font-size:13px;line-height:1.5"></p>
+    <div class="row">
+      <label class="f">Start<input type="time" id="ctStart"></label>
+      <label class="f">End<input type="time" id="ctEnd"></label>
+    </div>
+    <div class="actions" style="margin-top:6px">
+      <button type="button" class="btn" id="ctCancel">Cancel</button>
+      <button type="button" class="btn primary" id="ctSave">Save</button>
     </div>
   </div>
 </dialog>
@@ -1336,6 +1366,7 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
 
   /* ---------- main render ---------- */
   function render() {
+    closeAllClassMenus();
     var now = new Date();
     var c = state.cursor;
     if (widgetMode) { renderWidget(now); return; }
@@ -1418,7 +1449,21 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
   });
 
   /* ---------- class cancellation confirmation ---------- */
-  var pendingClassCancel = null;
+  var pendingClassCancel = null, pendingClassTime = null;
+  function hm(v) { var m = /^(\d{1,2}):(\d{2})/.exec(v || ''); return m ? +m[1] * 60 + +m[2] : null; }
+  $('ctCancel').addEventListener('click', function () { pendingClassTime = null; $('classTimeDialog').close(); });
+  $('classTimeDialog').addEventListener('click', function (ev) { if (ev.target === $('classTimeDialog')) { pendingClassTime = null; $('classTimeDialog').close(); } });
+  $('ctSave').addEventListener('click', function () {
+    if (!pendingClassTime) { $('classTimeDialog').close(); return; }
+    var ns = hm($('ctStart').value), ne = hm($('ctEnd').value);
+    if (ns === null || ne === null || ne <= ns) { toast('End time must be after start time.'); return; }
+    var dk = pendingClassTime.date, id = pendingClassTime.id, list = classesFor(parse(dk));
+    var ci = list.findIndex(function (c) { return c.id === id; });
+    if (ci < 0) { $('classTimeDialog').close(); return; }
+    list[ci].start = ns; list[ci].end = ne;
+    state.classOverrides[dk] = list; save(); pendingClassTime = null;
+    $('classTimeDialog').close(); render(); toast('Class time updated for this day.');
+  });
   $('keepClass').addEventListener('click', function(){ pendingClassCancel=null; $('classCancelDialog').close(); });
   $('confirmCancelClass').addEventListener('click', function(){
     if(!pendingClassCancel) { $('classCancelDialog').close(); return; }
@@ -1477,18 +1522,14 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
     if (classEdit) {
       closeAllClassMenus();
       var dateKey = classEdit.getAttribute('data-class-date'), classId = classEdit.getAttribute('data-class-edit');
-      var day = parse(dateKey), list = classesFor(day), ci = list.findIndex(function(c){return c.id === classId;});
-      if (ci < 0) return;
-      var c = list[ci];
-      var startText = prompt('New start time (24-hour, HH:MM):', pad(Math.floor(c.start/60))+':'+pad(c.start%60));
-      if (startText === null) return;
-      var endText = prompt('New end time (24-hour, HH:MM):', pad(Math.floor(c.end/60))+':'+pad(c.end%60));
-      if (endText === null) return;
-      function toMinutes(v){var m=/^(\\d{1,2}):(\\d{2})$/.exec(v.trim());if(!m||+m[1]>23||+m[2]>59)return null;return +m[1]*60+(+m[2]);}
-      var ns=toMinutes(startText), ne=toMinutes(endText);
-      if(ns===null||ne===null||ne<=ns){toast('Enter a valid time range.');return;}
-      list[ci].start=ns;list[ci].end=ne;state.classOverrides[dateKey]=list;
-      save();render();toast('Class time updated.');return;
+      var list0 = classesFor(parse(dateKey)), c0 = list0.find(function (c) { return c.id === classId; });
+      if (!c0) return;
+      pendingClassTime = {date: dateKey, id: classId};
+      $('ctInfo').textContent = c0.code + ' \u00B7 ' + c0.teacher + ' \u00B7 only for this day';
+      $('ctStart').value = pad(Math.floor(c0.start / 60)) + ':' + pad(c0.start % 60);
+      $('ctEnd').value = pad(Math.floor(c0.end / 60)) + ':' + pad(c0.end % 60);
+      $('classTimeDialog').showModal();
+      return;
     }
     var classRemove = t.closest('[data-class-remove]');
     if (classRemove) {
@@ -1540,6 +1581,8 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
     closeAllClassMenus();
   });
   document.addEventListener('keydown', function(ev){ if(ev.key === 'Escape') closeAllClassMenus(); });
+  window.addEventListener('scroll', closeAllClassMenus, {passive: true});
+  window.addEventListener('resize', closeAllClassMenus);
 
   ['searchText','filterType','filterCourse','filterDate'].forEach(function(id){
     $(id).addEventListener(id==='searchText'?'input':'change', function(){renderSide(new Date());});
