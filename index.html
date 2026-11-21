@@ -810,7 +810,7 @@ body.widget-mode .np,body.widget-mode .np-backdrop{display:none}
 #vacationList{margin:0}
 
 /* ===== routine dialog: sticky Back bar + vacation editing ===== */
-#rform{padding:0;gap:0}
+#rform,#form{padding:0;gap:0}
 .rbody{padding:16px 22px 22px;display:flex;flex-direction:column;gap:14px}
 .rbar{position:sticky;top:0;z-index:6;display:flex;align-items:center;gap:12px;padding:12px 18px;
   background:var(--glass-2);-webkit-backdrop-filter:blur(20px) saturate(1.7);backdrop-filter:blur(20px) saturate(1.7);border-bottom:1px solid var(--glass-brd)}
@@ -834,6 +834,17 @@ body.widget-mode .np,body.widget-mode .np-backdrop{display:none}
 .vacation-row.editing{opacity:1;border-color:rgba(63,156,141,.7);box-shadow:0 0 0 2px rgba(63,156,141,.25)}
 
 #rSaveClose[hidden]{display:none}
+
+/* ===== back bars + more glass ===== */
+.tools-bar{grid-column:1/-1;display:flex;align-items:center;gap:10px}
+.tools-bar strong{font-size:15px}
+.tools-clear{margin-left:auto;padding:6px 13px;border-radius:999px;color:var(--slate-deep);font-weight:700;font-size:13px;background:var(--btn);border:1px solid var(--glass-brd);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.55);-webkit-backdrop-filter:blur(12px) saturate(1.5);backdrop-filter:blur(12px) saturate(1.5)}
+@media(max-width:720px){.tools #searchText{grid-column:1/-1}}
+.rback{-webkit-backdrop-filter:blur(12px) saturate(1.5);backdrop-filter:blur(12px) saturate(1.5);transition:transform .15s,filter .15s}
+.rback:active,.tools-clear:active{transform:scale(.96)}
+:root:not(#g) .tools,:root:not(#g) .search-results{border-radius:20px;-webkit-backdrop-filter:var(--f);backdrop-filter:var(--f);box-shadow:var(--hi),var(--sh)}
+:root:not(#g) .add{border-radius:12px;background:var(--btn);border:1px solid var(--glass-brd);color:var(--slate-deep);box-shadow:inset 0 1px 0 rgba(255,255,255,.55);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
 </style>
 </head>
 <body>
@@ -912,6 +923,7 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
 <main class="shell">
   <section class="calendar-column">
     <div class="tools" id="searchTools" aria-label="Search and filter">
+      <div class="tools-bar"><button type="button" class="rback" id="searchBack" aria-label="Close search"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg><span>Back</span></button><strong>Search events</strong><button type="button" class="tools-clear" id="searchClear">Clear</button></div>
       <input type="text" id="searchText" placeholder="Search events..." aria-label="Search events">
       <select id="filterType" aria-label="Filter by type"><option value="">All types</option></select>
       <select id="filterCourse" aria-label="Filter by course"><option value="">All courses</option></select>
@@ -932,7 +944,11 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
 
 <dialog id="dlg" aria-labelledby="dlgTitle">
   <form id="form" autocomplete="off">
-    <h2 id="dlgTitle" style="margin:0;font-size:18px">Add item</h2>
+    <div class="rbar">
+      <button type="button" class="rback" id="dlgBack" aria-label="Close and go back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg><span>Back</span></button>
+      <h2 id="dlgTitle">Add item</h2>
+    </div>
+    <div class="rbody">
     <label class="f">What is it?
       <input type="text" id="fTitle" required maxlength="120" placeholder="CT on chapter 3">
     </label>
@@ -957,6 +973,7 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
       <button type="button" class="btn danger" id="fDelete">Delete</button>
       <button type="button" class="btn" id="fCancel">Cancel</button>
       <button type="submit" class="btn primary">Save</button>
+    </div>
     </div>
   </form>
 </dialog>
@@ -1221,10 +1238,10 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
   $('menuBtn').addEventListener('click',function(){if(fabMoved){fabMoved=false;return;}setMenu(!$('quickMenu').classList.contains('open'));});
   $('menuBackdrop').addEventListener('click',function(){setMenu(false);});
   $('searchToggle').addEventListener('click',function(){
-    var open=!$('searchTools').classList.contains('open');
-    $('searchTools').classList.toggle('open',open);
     setMenu(false);
-    if(open) $('searchText').focus();
+    if ($('searchTools').classList.contains('open')) { closeSearch(); return; }
+    $('searchTools').classList.add('open');
+    $('searchText').focus();
   });
   document.addEventListener('keydown',function(ev){if(ev.key==='Escape')setMenu(false);});
 
@@ -1485,6 +1502,7 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
     var want = e ? e.type : 'ct';
     Array.prototype.forEach.call(document.querySelectorAll('input[name="ftype"]'), function (r) { r.checked = (r.value === want); });
     $('fDelete').style.display = e ? '' : 'none';
+    eSig = eventSig();
     dlg.showModal();
     $('fTitle').focus();
   }
@@ -1514,7 +1532,7 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
     }
     save(); dlg.close(); render();
   });
-  $('fCancel').addEventListener('click', function () { dlg.close(); });
+  $('fCancel').addEventListener('click', function () { tryCloseEvent(); });
   $('fDelete').addEventListener('click', function () {
     if (!editingId) return;
     if (!confirm('Delete this item?')) return;
@@ -1817,7 +1835,7 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
       save(); if (vacEdit < 0) resetVacEdit(); else renderVacationList(); render(); toast('Vacation removed.');
     }
   });
-  var rSig = '';
+  var rSig = '', eSig = '', discardFor = 'routine';
   function routineSig() {
     return Array.prototype.map.call(document.querySelectorAll('#rStart,#rRoom,#rPeriods input,#rDays input,#rDays select'), function (e) { return e.value; }).join('|');
   }
@@ -1831,6 +1849,7 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
   function routineDirty() { return routineSig() !== rSig || vacPending() !== 'none'; }
   function tryCloseRoutine() {
     if (!routineDirty()) { rdlg.close(); return; }
+    discardFor = 'routine';
     var bad = vacPending() === 'invalid';
     $('rSaveClose').hidden = bad;
     $('rDiscardMsg').textContent = bad
@@ -1839,10 +1858,30 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
     if (!$('rDiscardDialog').open) $('rDiscardDialog').showModal();
   }
   $('rBack').addEventListener('click', tryCloseRoutine);
+  function eventSig() {
+    var t = document.querySelector('input[name="ftype"]:checked');
+    return Array.prototype.map.call(document.querySelectorAll('#fTitle,#fDate,#fTime,#fCourse,#fNote,#fRepeat,#fRepeatCount'), function (e) { return e.value; }).join('|') + '|' + (t ? t.value : '');
+  }
+  function tryCloseEvent() {
+    if (eventSig() === eSig) { dlg.close(); return; }
+    discardFor = 'event'; $('rSaveClose').hidden = false;
+    $('rDiscardMsg').textContent = 'You have changes that are not saved yet. If you go back now, they will be lost.';
+    if (!$('rDiscardDialog').open) $('rDiscardDialog').showModal();
+  }
+  $('dlgBack').addEventListener('click', tryCloseEvent);
+  dlg.addEventListener('cancel', function (ev) { if (eventSig() !== eSig) { ev.preventDefault(); tryCloseEvent(); } });
+
+  /* search: Back / Clear / Esc */
+  function resetSearch() { $('searchText').value = ''; $('filterType').value = ''; $('filterCourse').value = ''; $('filterDate').value = ''; render(); }
+  function closeSearch() { $('searchTools').classList.remove('open'); resetSearch(); }
+  $('searchBack').addEventListener('click', closeSearch);
+  $('searchClear').addEventListener('click', function () { resetSearch(); $('searchText').focus(); });
+  $('searchTools').addEventListener('keydown', function (ev) { if (ev.key === 'Escape') closeSearch(); });
   rdlg.addEventListener('cancel', function (ev) { if (routineDirty()) { ev.preventDefault(); tryCloseRoutine(); } });
   $('rKeep').addEventListener('click', function () { $('rDiscardDialog').close(); });
-  $('rDiscard').addEventListener('click', function () { $('rDiscardDialog').close(); rdlg.close(); });
+  $('rDiscard').addEventListener('click', function () { $('rDiscardDialog').close(); (discardFor === 'event' ? dlg : rdlg).close(); });
   $('rSaveClose').addEventListener('click', function () {
+    if (discardFor === 'event') { $('rDiscardDialog').close(); $('form').requestSubmit(); return; }
     var pv = vacPending();
     $('rDiscardDialog').close();
     if (pv === 'valid') $('addVacation').click();
