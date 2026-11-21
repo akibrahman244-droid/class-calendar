@@ -779,6 +779,18 @@ body.widget-mode .np,body.widget-mode .np-backdrop{display:none}
 :root[data-theme="dark"]:not(#g) .day.today{background:linear-gradient(160deg,rgba(255,255,255,.12),rgba(63,156,141,.18) 58%,rgba(255,255,255,.07))}
 :root[data-theme="dark"]:not(#g) .day-h{background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,.04)),rgba(96,122,165,.34);color:var(--ink);border-bottom:1px solid rgba(255,255,255,.16);box-shadow:inset 0 1px 0 rgba(255,255,255,.22)}
 :root[data-theme="dark"]:not(#g) .day.today .day-h{background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.04)),rgba(63,156,141,.42)}
+
+/* ===== v7: compact class menu next to the three dots, push note ===== */
+.class-menu.menu-portal{min-width:150px !important;max-width:200px !important;padding:5px !important;border-radius:13px !important}
+.class-menu.menu-portal button{min-height:36px !important;padding:8px 12px !important;font-size:13px !important;white-space:nowrap !important}
+.np-push{font-size:12.5px;line-height:1.45;color:var(--ink);padding:12px 10px 0;margin:0}
+.np-push:empty{display:none}
+.np-push.ok{color:var(--teal);font-weight:600}
+#npSignIn{display:block;margin:2px 4px 0}
+#npSignIn[hidden]{display:none}
+
+.class-menu.menu-portal::before{content:"";position:absolute;top:-7px;left:calc(var(--ax,130px) - 7px);width:14px;height:7px;background:var(--glass-2,#fff);clip-path:polygon(50% 0,0 100%,100% 100%)}
+.class-menu.menu-portal.flip::before{top:auto;bottom:-7px;clip-path:polygon(0 0,100% 0,50% 100%)}
 </style>
 </head>
 <body>
@@ -847,7 +859,9 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
       <div id="npScopes"></div>
       <button class="btn np-test" id="npTest" type="button">Send test notification</button>
     </div>
-    <p class="np-foot">Reminders are checked while the app is open or running in the background. Settings are saved on this device only.</p>
+    <p class="np-push" id="npPushNote"></p>
+    <button type="button" class="np-link" id="npSignIn" hidden>Sign in with Google</button>
+    <p class="np-foot">Settings are saved on this device only. On Android, if reminders stop when the app is closed, set the app's battery usage to Unrestricted.</p>
   </div>
 </aside>
 
@@ -1066,6 +1080,7 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
     clear: function (stamp) { try { if (localStorage.getItem(PENDKEY) === stamp) localStorage.removeItem(PENDKEY); } catch (e) {} }
   };
   function save() {
+    try { nQueueSync(); } catch (e) {}
     if (window.calendarCloudActive) { try { localStorage.setItem(PENDKEY, String(Date.now()) + '-' + Math.random().toString(36).slice(2, 6)); } catch (e) {} }
     var payload = {events: state.events, showClasses: state.showClasses, cfg: JSON.stringify(getCfg()), panels: state.panels, classOverrides: state.classOverrides, vacations: state.vacations};
     try { localStorage.setItem(KEY, JSON.stringify(payload)); }
@@ -1503,15 +1518,14 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
         menu.classList.add('menu-portal');
         menu.hidden = false;
 
-        var menuWidth = Math.min(240, window.innerWidth - 24);
-        var left = Math.max(12, Math.min(window.innerWidth - menuWidth - 12, triggerRect.right - menuWidth));
+        var menuWidth = menu.offsetWidth || 160, menuHeight = menu.offsetHeight || 90;
+        var left = Math.max(8, Math.min(window.innerWidth - menuWidth - 8, triggerRect.right - menuWidth));
+        var top = triggerRect.bottom + 9;
+        if (top + menuHeight > window.innerHeight - 8) top = Math.max(8, triggerRect.top - menuHeight - 9);
+        var flip = top < triggerRect.top;
+        menu.classList.toggle('flip', flip);
+        menu.style.setProperty('--ax', Math.max(14, Math.min(menuWidth - 14, triggerRect.left + triggerRect.width / 2 - left)) + 'px');
         menu.style.left = left + 'px';
-
-        var menuHeight = menu.getBoundingClientRect().height || 100;
-        var top = triggerRect.bottom + 8;
-        if (top + menuHeight > window.innerHeight - 12) {
-          top = Math.max(12, triggerRect.top - menuHeight - 8);
-        }
         menu.style.top = top + 'px';
         card.classList.add('menu-open');
         menuToggle.setAttribute('aria-expanded', 'true');
@@ -1783,7 +1797,7 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
     return d;
   }
   var notif = nLoad();
-  function nSave() { try { localStorage.setItem(NKEY, JSON.stringify(notif)); } catch (e) {} }
+  function nSave() { try { localStorage.setItem(NKEY, JSON.stringify(notif)); } catch (e) {} nQueueSync(); }
   function nCan() { return 'Notification' in window; }
 
   function renderNotif() {
@@ -1804,6 +1818,7 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
       h += '</div><div class="np-cust"><span>Custom</span><input type="number" inputmode="numeric" min="1" max="720" placeholder="25" data-ci="' + sc.id + '" aria-label="Custom minutes"><span>min</span><button type="button" class="btn" data-ca="' + sc.id + '">Add</button></div></div>';
     });
     $('npScopes').innerHTML = h;
+    renderPushNote();
   }
 
   function openNotif() {
@@ -1825,7 +1840,7 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
     if (notif.on) { notif.on = false; nSave(); setNote(''); renderNotif(); return; }
     if (!nCan()) { setNote('This browser does not support notifications.'); return; }
     if (Notification.permission === 'denied') { setNote('Notifications are blocked. Allow them for this site in your browser settings, then try again.'); return; }
-    function enable() { notif.on = true; nSave(); setNote(''); renderNotif(); nTick(); toast('Class reminders are on.'); }
+    function enable() { notif.on = true; nSave(); setNote(''); renderNotif(); nTick(); toast(window.calendarCloudActive ? 'Class reminders are on.' : 'Reminders on. Sign in with Google so they also work when the app is closed.'); }
     if (Notification.permission === 'granted') { enable(); return; }
     // first time only: ask for permission
     var p = Notification.requestPermission(function (r) { if (r === 'granted') enable(); else setNote('Permission was not given, so reminders stay off.'); });
@@ -1893,10 +1908,12 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
   });
 
   function nFired() { try { return JSON.parse(localStorage.getItem(NFIRED) || '{}'); } catch (e) { return {}; } }
-  function nTick() {
-    if (!notif.on || !nCan() || Notification.permission !== 'granted') return;
-    var now = Date.now(), today = new Date(), fired = nFired(), groups = {}, changed = false;
-    for (var off = 0; off <= 1; off++) {
+  function nWhat(first, sess) { return sess ? 'Sessional' : (first ? 'First class' : 'Class'); }
+  function nBody(c) { return c.code + ' \u00B7 ' + fmtTime(c.start) + '\u2013' + fmtTime(c.end) + ' \u00B7 ' + c.teacher + ' \u00B7 Room ' + ROOM; }
+  // every reminder that the current settings produce for the next `days` days
+  function nCollect(days) {
+    var today = new Date(), out = [];
+    for (var off = 0; off < days; off++) {
       var d = addDays(today, off);
       var cls = classesFor(d).sort(function (a, b) { return a.start - b.start; });
       cls.forEach(function (c, i) {
@@ -1910,19 +1927,25 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
         });
         var startMs = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, c.start).getTime();
         Object.keys(mins).forEach(function (m) {
-          var fire = startMs - m * 60000, key = ymd(d) + '|' + c.start + '|' + c.code, fk = key + '|' + m;
-          if (fire <= now && now < startMs && !fired[fk]) {
-            var g = groups[key] = groups[key] || {c: c, startMs: startMs, first: isFirst, sess: isSess, keys: []};
-            g.keys.push(fk);
-          }
+          var key = ymd(d) + '|' + c.start + '|' + c.code;
+          out.push({key: key, fk: key + '|' + m, m: +m, fire: startMs - m * 60000, startMs: startMs, c: c, first: isFirst, sess: isSess});
         });
       });
     }
+    return out;
+  }
+  function nTick() {
+    if (!notif.on || !nCan() || Notification.permission !== 'granted') return;
+    var now = Date.now(), fired = nFired(), groups = {}, changed = false;
+    nCollect(2).forEach(function (x) {
+      if (x.fire <= now && now < x.startMs && !fired[x.fk]) {
+        var g = groups[x.key] = groups[x.key] || {x: x, keys: []};
+        g.keys.push(x.fk);
+      }
+    });
     Object.keys(groups).forEach(function (k) {
-      var g = groups[k], left = Math.max(1, Math.ceil((g.startMs - now) / 60000));
-      var what = g.sess ? 'Sessional' : (g.first ? 'First class' : 'Class');
-      showNotif(what + ' in ' + left + ' min',
-        g.c.code + ' \u00B7 ' + fmtTime(g.c.start) + '\u2013' + fmtTime(g.c.end) + ' \u00B7 ' + g.c.teacher + ' \u00B7 Room ' + ROOM, k);
+      var g = groups[k], x = g.x, left = Math.max(1, Math.ceil((x.startMs - now) / 60000));
+      showNotif(nWhat(x.first, x.sess) + ' in ' + left + ' min', nBody(x.c), k);
       g.keys.forEach(function (fk) { fired[fk] = now; }); changed = true;
     });
     if (changed) {
@@ -1930,6 +1953,40 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
       try { localStorage.setItem(NFIRED, JSON.stringify(fired)); } catch (e) {}
     }
   }
+
+  /* ---- reminders that arrive even when the app is closed (push) ---- */
+  var pushTimer = null, nPushStatus = '';
+  function nQueueSync() { clearTimeout(pushTimer); pushTimer = setTimeout(nPushSync, 2500); }
+  function nPushSync() {
+    if (!window.calendarPushSync) return;
+    var on = !!(notif.on && nCan() && Notification.permission === 'granted'), items = [];
+    if (on) {
+      var now = Date.now();
+      nCollect(7).forEach(function (x) {
+        if (x.startMs <= now) return;
+        items.push({id: x.fk, tag: x.key, fireAt: x.fire, start: x.startMs, m: x.m, title: nWhat(x.first, x.sess) + ' in ' + x.m + ' min', body: nBody(x.c)});
+      });
+    }
+    window.calendarPushSync(items, on);
+  }
+  window.reminderPushSync = nQueueSync;
+  window.reminderPushStatus = function (st) { nPushStatus = st || ''; renderPushNote(); };
+  function renderPushNote() {
+    var el = $('npPushNote'), b = $('npSignIn'); if (!el) return;
+    var T = {
+      ok: 'Background reminders are active. They arrive even when the app is closed.',
+      signin: 'Sign in with Google to also get reminders when the app is closed.',
+      'not-configured': 'Closed-app reminders are not set up on the server yet. Until then reminders work while the app is open.',
+      unsupported: 'This browser cannot receive reminders while the app is closed.',
+      error: 'Could not set up closed-app reminders. It will retry automatically.'
+    };
+    var st = notif.on ? nPushStatus : '';
+    var BG = 'Reminders arrive while the app is open or running in the background. Do not close it from recent apps.';
+    var txt = !notif.on ? '' : (st === 'ok' || st === 'signin' || st === 'unsupported' || st === 'error') ? T[st] : BG;
+    el.textContent = txt; el.className = 'np-push' + (st === 'ok' && notif.on ? ' ok' : '');
+    b.hidden = st !== 'signin';
+  }
+  $('npSignIn').addEventListener('click', function () { if (window.calendarCloudToggle) window.calendarCloudToggle(); });
   setInterval(nTick, 20000);
   document.addEventListener('visibilitychange', function () { if (!document.hidden) nTick(); });
   window.addEventListener('focus', nTick);
@@ -2014,6 +2071,40 @@ if (configured) {
   try { db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) }); }
   catch (e) { db = getFirestore(app); }
   let stopListening = null, writeTimer = null, activeUser = null, firstSync = true;
+
+  // ----- closed-app reminders (Firebase Cloud Messaging) -----
+  // Paste the "Web Push certificate" key pair from Firebase console > Project settings > Cloud Messaging.
+  const PUSH_VAPID_KEY = 'PASTE_WEB_PUSH_KEY_HERE';
+  const deviceId = (() => { try { let d = localStorage.getItem('akib-device-id'); if (!d) { d = Math.random().toString(36).slice(2, 10) + Date.now().toString(36); localStorage.setItem('akib-device-id', d); } return d; } catch (e) { return 'dev'; } })();
+  let pushToken = null;
+  const pushState = st => { if (window.reminderPushStatus) window.reminderPushStatus(st); };
+  async function getPushToken() {
+    if (pushToken) return pushToken;
+    if (PUSH_VAPID_KEY.startsWith('PASTE_')) { pushState('not-configured'); return null; }
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) { pushState('unsupported'); return null; }
+    const { getMessaging, getToken, isSupported } = await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js');
+    if (!(await isSupported())) { pushState('unsupported'); return null; }
+    const reg = await navigator.serviceWorker.ready;
+    pushToken = await getToken(getMessaging(app), { vapidKey: PUSH_VAPID_KEY, serviceWorkerRegistration: reg });
+    return pushToken || null;
+  }
+  window.calendarPushSync = async function (items, on) {
+    try {
+      if (PUSH_VAPID_KEY.startsWith('PASTE_')) { pushState(on ? 'not-configured' : ''); return; }
+      if (!activeUser) { pushState(on ? 'signin' : ''); return; }
+      const ref = doc(db, 'reminders', activeUser.uid + '_' + deviceId);
+      let flag = null; try { flag = localStorage.getItem('akib-push-on'); } catch (e) {}
+      if (!on) {
+        if (flag) { await setDoc(ref, { uid: activeUser.uid, items: [], updatedAt: new Date().toISOString() }, { merge: true }); try { localStorage.removeItem('akib-push-on'); } catch (e) {} }
+        pushState(''); return;
+      }
+      const token = await getPushToken();
+      if (!token) return;
+      await setDoc(ref, { uid: activeUser.uid, token, items, updatedAt: new Date().toISOString() }, { merge: true });
+      try { localStorage.setItem('akib-push-on', '1'); } catch (e) {}
+      pushState('ok');
+    } catch (e) { console.error(e); pushState('error'); }
+  };
   window.calendarCloudToggle = async function () {
     try {
       if (auth.currentUser) await signOut(auth);
@@ -2055,6 +2146,7 @@ if (configured) {
     activeUser = user; firstSync = true; window.calendarCloudActive = !!user;
     if (stopListening) { stopListening(); stopListening = null; }
     window.setCalendarAuthUI(user, user ? 'Connecting cloud...' : 'Cloud sync not connected');
+    if (window.reminderPushSync) window.reminderPushSync();
     if (!user) return;
     const ref = doc(db, 'calendars', user.uid);
     stopListening = onSnapshot(ref, { includeMetadataChanges: true }, async snap => {
@@ -2081,6 +2173,7 @@ if (configured) {
         }
         window.applyCloudData(data);
         $status('Cloud sync active');
+        if (window.reminderPushSync) window.reminderPushSync();
       } catch (e) { console.error(e); $status('Cloud sync error'); }
     }, err => { console.error(err); $status(err.code === 'permission-denied' ? 'Cloud blocked - check Firestore rules' : 'Cloud sync error'); });
   });

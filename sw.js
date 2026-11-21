@@ -1,6 +1,6 @@
 // Offline-first service worker. Online: always fetches the latest files (and refreshes the cache).
 // Offline: serves the saved copy so the app still opens and works.
-var CACHE = 'class-calendar-v12-vacation';
+var CACHE = 'class-calendar-v14-vacation';
 var CORE = ['./', 'index.html', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'favicon-64.png', 'badge-logo.png', 'splash-192.png', 'splash-512.png', 'loading-logo.png'];
 
 self.addEventListener('install', function (e) {
@@ -54,5 +54,19 @@ self.addEventListener('notificationclick', function (e) {
   e.waitUntil(self.clients.matchAll({type: 'window', includeUncontrolled: true}).then(function (list) {
     for (var i = 0; i < list.length; i++) { if ('focus' in list[i]) return list[i].focus(); }
     return self.clients.openWindow('./');
+  }));
+});
+
+// Reminder pushed by the server while the app is closed
+self.addEventListener('push', function (e) {
+  var d = {};
+  try { var j = e.data ? e.data.json() : {}; d = j.data || j.notification || j; } catch (x) { try { d = {body: e.data.text()}; } catch (y) {} }
+  e.waitUntil(self.clients.matchAll({type: 'window', includeUncontrolled: true}).then(function (list) {
+    // if the app is on screen it already shows its own glass banner
+    if (list.some(function (c) { return c.visibilityState === 'visible'; })) return;
+    return self.registration.showNotification(d.title || 'Class Calendar', {
+      body: d.body || '', icon: 'icon-192.png', badge: 'favicon-64.png',
+      tag: d.ctag || d.tag || undefined, data: {url: './'}
+    });
   }));
 });
