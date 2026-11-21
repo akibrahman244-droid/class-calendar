@@ -791,6 +791,23 @@ body.widget-mode .np,body.widget-mode .np-backdrop{display:none}
 
 .class-menu.menu-portal::before{content:"";position:absolute;top:-7px;left:calc(var(--ax,130px) - 7px);width:14px;height:7px;background:var(--glass-2,#fff);clip-path:polygon(50% 0,0 100%,100% 100%)}
 .class-menu.menu-portal.flip::before{top:auto;bottom:-7px;clip-path:polygon(0 0,100% 0,50% 100%)}
+
+/* ===== vacation v2: red, fits inside the cell, past days fade; dialog spacing ===== */
+.vacation-banner,.vacation-pill{background:rgba(214,70,90,.15);border:1px solid rgba(214,70,90,.32);color:#C23B52}
+:root[data-theme="dark"] .vacation-banner,:root[data-theme="dark"] .vacation-pill{background:rgba(240,100,120,.20);border-color:rgba(240,120,135,.38);color:#FF9AA8}
+.vacation-banner.past,.vacation-pill.past{background:rgba(214,70,90,.06);border-color:rgba(214,70,90,.14);color:rgba(194,59,82,.50)}
+:root[data-theme="dark"] .vacation-banner.past,:root[data-theme="dark"] .vacation-pill.past{background:rgba(240,100,120,.08);border-color:rgba(240,120,135,.16);color:rgba(255,154,168,.50)}
+.mc{overflow:hidden}
+.mc .vacation-pill{display:block;flex:none;box-sizing:border-box;width:100%;min-width:0;margin:0;padding:2px 3px;border-radius:8px;font-size:11px;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vacation-pill .vs{display:none}
+@media(max-width:720px){.mc .vacation-pill .vf{display:none}.mc .vacation-pill .vs{display:inline}.mc .vacation-pill{font-size:10px}}
+:root:not(#g) .mc.vac{background:linear-gradient(rgba(214,70,90,.13),rgba(214,70,90,.13)),var(--glass)}
+:root:not(#g) .mc.vac-past{background:linear-gradient(rgba(214,70,90,.05),rgba(214,70,90,.05)),var(--glass)}
+#rform .routine-panel{display:flex;flex-direction:column;gap:12px}
+#rform .routine-panel>*{margin:0}
+#rform .routine-panel .row{align-items:flex-start}
+#rform .routine-panel .f{flex:1;min-width:0}
+#vacationList{margin:0}
 </style>
 </head>
 <body>
@@ -1205,7 +1222,7 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
     var html = '<section class="day' + (k === today ? ' today' : '') + (single ? ' single' : '') + '" aria-label="' + DAYS[d.getDay()] + ' ' + d.getDate() + ' ' + MON[d.getMonth()] + '">' +
       '<header class="day-h"><span class="nm">' + DAYS[d.getDay()] + '</span><span class="dt">' + d.getDate() + ' ' + MON[d.getMonth()] + '</span></header>' +
       '<div class="day-b">';
-    if (vacation) html += '<div class="vacation-banner">Vacation</div>';
+    if (vacation) html += '<div class="vacation-banner' + (k < today ? ' past' : '') + '">Vacation</div>';
     var items = [];
     evs.forEach(function (e) { items.push({m: e.time ? +e.time.slice(0, 2) * 60 + +e.time.slice(3, 5) : -1, h: evHtml(e)}); });
     cls.forEach(function (c) { items.push({m: c.start, h: clsHtml(c, k === today && c.start <= nowMin && nowMin < c.end)}); });
@@ -1250,11 +1267,11 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
     ORDER.forEach(function (i) { html += '<div class="mh">' + SHORT[i] + '</div>'; });
     for (var d = new Date(start); d <= end; d = addDays(d, 1)) {
       var k = ymd(d), evs = eventsOn(k);
-      var vacation = isVacation(k);
+      var vacation = isVacation(k), vacPast = vacation && k < today;
       var nCls = state.showClasses ? classesFor(d).length : 0;
-      html += '<div class="mc' + (d.getMonth() !== c.getMonth() ? ' out' : '') + (k === today ? ' today' : '') + '" data-cell="' + k + '">' +
+      html += '<div class="mc' + (d.getMonth() !== c.getMonth() ? ' out' : '') + (k === today ? ' today' : '') + (vacation ? (vacPast ? ' vac vac-past' : ' vac') : '') + '" data-cell="' + k + '">' +
         '<button class="n" data-goto="' + k + '" aria-label="Open week of ' + d.getDate() + ' ' + MON[d.getMonth()] + '">' + d.getDate() + '</button>';
-      if (vacation) html += '<span class="vacation-pill">Vacation</span>';
+      if (vacation) html += '<span class="vacation-pill' + (vacPast ? ' past' : '') + '"><span class="vf">Vacation</span><span class="vs">Vac</span></span>';
       evs.slice(0, 3).forEach(function (e) {
         html += '<button class="pill' + (e.done ? ' done' : '') + '" style="background:' + typeOf(e.type).color + '" data-edit="' + e.id + '" title="' + esc(e.title) + '"><span class="pt">' + esc(e.title) + '</span></button>';
       });
