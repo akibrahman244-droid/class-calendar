@@ -808,6 +808,32 @@ body.widget-mode .np,body.widget-mode .np-backdrop{display:none}
 #rform .routine-panel .row{align-items:flex-start}
 #rform .routine-panel .f{flex:1;min-width:0}
 #vacationList{margin:0}
+
+/* ===== routine dialog: sticky Back bar + vacation editing ===== */
+#rform{padding:0;gap:0}
+.rbody{padding:16px 22px 22px;display:flex;flex-direction:column;gap:14px}
+.rbar{position:sticky;top:0;z-index:6;display:flex;align-items:center;gap:12px;padding:12px 18px;
+  background:var(--glass-2);-webkit-backdrop-filter:blur(20px) saturate(1.7);backdrop-filter:blur(20px) saturate(1.7);border-bottom:1px solid var(--glass-brd)}
+.rbar h2{margin:0;font-size:17px}
+.rback{display:inline-flex;align-items:center;gap:3px;padding:7px 14px 7px 8px;border-radius:999px;background:var(--btn);border:1px solid var(--glass-brd);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.6);color:var(--slate-deep);font-weight:700;font-size:14px}
+.rback svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+#cancelVacEdit[hidden]{display:none}
+.vacation-row{align-items:center}
+.vr-main{display:flex;flex-direction:column;gap:2px;min-width:0}
+.vr-main b{font-size:13px}
+.vr-main small{font-size:11px;color:var(--muted)}
+.vtag{font-style:normal;font-weight:700;padding:1px 7px;border-radius:999px;font-size:10px}
+.vtag.now{background:rgba(214,70,90,.16);color:#C23B52}
+.vtag.soon{background:rgba(111,130,168,.18);color:var(--slate-deep)}
+.vtag.over{background:rgba(120,130,150,.16);color:var(--muted)}
+:root[data-theme="dark"] .vtag.now{color:#FF9AA8}
+.vr-btns{display:flex;gap:2px;flex:none}
+.vacation-row .vr-edit{color:var(--slate-deep);font-weight:700;padding:4px 8px}
+.vacation-row.past{opacity:.65}
+.vacation-row.editing{opacity:1;border-color:rgba(63,156,141,.7);box-shadow:0 0 0 2px rgba(63,156,141,.25)}
+
+#rSaveClose[hidden]{display:none}
 </style>
 </head>
 <body>
@@ -937,7 +963,11 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
 
 <dialog id="rdlg" aria-labelledby="rTitle">
   <form id="rform" autocomplete="off">
-    <h2 id="rTitle" style="margin:0;font-size:18px">Update routine</h2>
+    <div class="rbar">
+      <button type="button" class="rback" id="rBack" aria-label="Close and go back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg><span>Back</span></button>
+      <h2 id="rTitle">Update routine</h2>
+    </div>
+    <div class="rbody">
     <section class="routine-panel" style="padding:12px;border:1px solid var(--glass-brd);border-radius:16px;background:var(--glass);margin:12px 0">
       <h3 style="margin:0 0 6px;font-size:14px">Vacation</h3>
       <p class="hint">Select your vacation dates. Classes will not appear on these days.</p>
@@ -945,7 +975,7 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
         <label class="f">From date<input type="date" id="vacStart"></label>
         <label class="f">To date<input type="date" id="vacEnd"></label>
       </div>
-      <div class="actions"><button type="button" class="btn primary" id="addVacation">Add vacation</button></div>
+      <div class="actions"><button type="button" class="btn" id="cancelVacEdit" hidden>Cancel edit</button><button type="button" class="btn primary" id="addVacation">Add vacation</button></div>
       <div id="vacationList"></div>
     </section>
     <div class="row">
@@ -960,7 +990,19 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
       <button type="button" class="btn" id="rCancel">Cancel</button>
       <button type="submit" class="btn primary">Save routine</button>
     </div>
+    </div>
   </form>
+</dialog>
+<dialog id="rDiscardDialog" aria-labelledby="rDiscardTitle">
+  <div class="class-confirm" style="padding:22px;display:flex;flex-direction:column;gap:12px">
+    <h2 id="rDiscardTitle" style="margin:0;font-size:18px">Save your changes?</h2>
+    <p id="rDiscardMsg" style="margin:0;color:var(--muted);font-size:13px;line-height:1.5">You have changes that are not saved yet. If you go back now, they will be lost.</p>
+    <div class="actions" style="margin-top:6px;flex-wrap:wrap">
+      <button type="button" class="btn" id="rKeep">Keep editing</button>
+      <button type="button" class="btn" id="rDiscard" style="color:var(--rose)">Discard</button>
+      <button type="button" class="btn primary" id="rSaveClose">Save</button>
+    </div>
+  </div>
 </dialog>
 <dialog id="classCancelDialog" aria-labelledby="classCancelTitle">
   <div class="class-confirm" style="padding:22px;display:flex;flex-direction:column;gap:12px">
@@ -1734,26 +1776,80 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
     if (del) del.closest('.rrow').remove();
     if (add) add.parentNode.querySelector('.rrows').insertAdjacentHTML('beforeend', rowHtml([1, 1, '', '']));
   });
+  var vacEdit = -1;
+  function vacLabel(iso) { var d = parse(iso); return d.getDate() + ' ' + MON[d.getMonth()] + ' ' + d.getFullYear(); }
+  function vacDays(v) { return Math.round((parse(v.end) - parse(v.start)) / 86400000) + 1; }
+  function resetVacEdit() {
+    vacEdit = -1; $('vacStart').value = ''; $('vacEnd').value = '';
+    $('addVacation').textContent = 'Add vacation'; $('cancelVacEdit').hidden = true;
+    renderVacationList();
+  }
   function renderVacationList() {
-    $('vacationList').innerHTML = (state.vacations || []).map(function(v,i) {
-      return '<div class="vacation-row"><span>' + esc(v.start) + ' → ' + esc(v.end) + '</span><button type="button" data-vac-remove="' + i + '">Remove</button></div>';
+    var t = ymd(new Date());
+    $('vacationList').innerHTML = (state.vacations || []).map(function (v, i) {
+      var tag = v.end < t ? ['Over', 'over'] : v.start > t ? ['Upcoming', 'soon'] : ['Ongoing', 'now'], n = vacDays(v);
+      return '<div class="vacation-row' + (i === vacEdit ? ' editing' : '') + (v.end < t ? ' past' : '') + '"><span class="vr-main"><b>' + vacLabel(v.start) + (v.end !== v.start ? ' \u2013 ' + vacLabel(v.end) : '') +
+        '</b><small>' + n + (n === 1 ? ' day' : ' days') + ' \u00b7 <i class="vtag ' + tag[1] + '">' + tag[0] + '</i></small></span><span class="vr-btns"><button type="button" class="vr-edit" data-vac-edit="' + i + '">Edit</button><button type="button" data-vac-remove="' + i + '">Remove</button></span></div>';
     }).join('') || '<p class="hint">No vacation dates added.</p>';
   }
-  $('addVacation').addEventListener('click',function(){
-    var a=$('vacStart').value,b=$('vacEnd').value;
-    if(!a||!b||b<a){toast('Select a valid vacation date range.');return;}
+  $('addVacation').addEventListener('click', function () {
+    var a = $('vacStart').value, b = $('vacEnd').value;
+    if (!a || !b || b < a) { toast('Select a valid vacation date range.'); return; }
     state.vacations = state.vacations || [];
-    state.vacations.push({start:a,end:b});
-    state.vacations.sort(function(x,y){return x.start.localeCompare(y.start);});
-    save();renderVacationList();render();toast('Vacation dates added.');
-    $('vacStart').value='';$('vacEnd').value='';
+    var editing = vacEdit >= 0 && state.vacations[vacEdit];
+    if (editing) state.vacations[vacEdit] = {start: a, end: b}; else state.vacations.push({start: a, end: b});
+    state.vacations.sort(function (x, y) { return x.start.localeCompare(y.start); });
+    save(); resetVacEdit(); render(); toast(editing ? 'Vacation updated.' : 'Vacation dates added.');
   });
-  $('vacationList').addEventListener('click',function(ev){
-    var btn=ev.target.closest('[data-vac-remove]');if(!btn)return;
-    state.vacations.splice(+btn.getAttribute('data-vac-remove'),1);save();renderVacationList();render();toast('Vacation removed.');
+  $('cancelVacEdit').addEventListener('click', resetVacEdit);
+  $('vacationList').addEventListener('click', function (ev) {
+    var ed = ev.target.closest('[data-vac-edit]'), rm = ev.target.closest('[data-vac-remove]');
+    if (ed) {
+      var i = +ed.getAttribute('data-vac-edit'), v = state.vacations[i]; if (!v) return;
+      vacEdit = i; $('vacStart').value = v.start; $('vacEnd').value = v.end;
+      $('addVacation').textContent = 'Update vacation'; $('cancelVacEdit').hidden = false;
+      renderVacationList(); $('vacStart').scrollIntoView({block: 'center', behavior: 'smooth'});
+    }
+    if (rm) {
+      var j = +rm.getAttribute('data-vac-remove');
+      state.vacations.splice(j, 1);
+      if (vacEdit === j) vacEdit = -1; else if (vacEdit > j) vacEdit--;
+      save(); if (vacEdit < 0) resetVacEdit(); else renderVacationList(); render(); toast('Vacation removed.');
+    }
   });
-  $('routineBtn').addEventListener('click', function () { setMenu(false); buildRoutineForm(getCfg()); renderVacationList(); rdlg.showModal(); });
-  $('rCancel').addEventListener('click', function () { rdlg.close(); });
+  var rSig = '';
+  function routineSig() {
+    return Array.prototype.map.call(document.querySelectorAll('#rStart,#rRoom,#rPeriods input,#rDays input,#rDays select'), function (e) { return e.value; }).join('|');
+  }
+  function vacPending() {
+    var a = $('vacStart').value, b = $('vacEnd').value;
+    if (!a && !b) return 'none';
+    var cur = vacEdit >= 0 && state.vacations[vacEdit];
+    if (cur && cur.start === a && cur.end === b) return 'none';
+    return (a && b && b >= a) ? 'valid' : 'invalid';
+  }
+  function routineDirty() { return routineSig() !== rSig || vacPending() !== 'none'; }
+  function tryCloseRoutine() {
+    if (!routineDirty()) { rdlg.close(); return; }
+    var bad = vacPending() === 'invalid';
+    $('rSaveClose').hidden = bad;
+    $('rDiscardMsg').textContent = bad
+      ? 'Your vacation dates are incomplete. Finish them (From and To) or clear them, otherwise they will be lost.'
+      : 'You have changes that are not saved yet. If you go back now, they will be lost.';
+    if (!$('rDiscardDialog').open) $('rDiscardDialog').showModal();
+  }
+  $('rBack').addEventListener('click', tryCloseRoutine);
+  rdlg.addEventListener('cancel', function (ev) { if (routineDirty()) { ev.preventDefault(); tryCloseRoutine(); } });
+  $('rKeep').addEventListener('click', function () { $('rDiscardDialog').close(); });
+  $('rDiscard').addEventListener('click', function () { $('rDiscardDialog').close(); rdlg.close(); });
+  $('rSaveClose').addEventListener('click', function () {
+    var pv = vacPending();
+    $('rDiscardDialog').close();
+    if (pv === 'valid') $('addVacation').click();
+    $('rform').requestSubmit();
+  });
+  $('routineBtn').addEventListener('click', function () { setMenu(false); buildRoutineForm(getCfg()); resetVacEdit(); rSig = routineSig(); rdlg.showModal(); });
+  $('rCancel').addEventListener('click', tryCloseRoutine);
   $('rReset').addEventListener('click', function () {
     if (confirm('Reset the routine to the original one?')) buildRoutineForm(JSON.parse(JSON.stringify(DEFAULT_CFG)));
   });
