@@ -921,6 +921,26 @@ body{touch-action:pan-y pinch-zoom}
   :root[data-theme="dark"] .cls, :root[data-theme="dark"] .ev{background:color-mix(in srgb,var(--c) 92%,transparent)}
   .day::before,.card::before{display:none}
 }
+
+/* ===== exam countdown picker (inline in the menu, glass) ===== */
+#tCount .ns{margin-left:auto;font-size:12px;font-weight:700;color:var(--muted)}
+#tCount::after{content:"";width:8px;height:8px;margin-left:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg) translateY(-2px);transition:transform .25s ease;flex:none}
+#tCount.expanded::after{transform:rotate(-135deg) translate(-2px,-1px)}
+.ms-glass{position:relative;overflow:hidden;background:linear-gradient(160deg,rgba(255,255,255,.55),rgba(255,255,255,.18) 55%,rgba(140,160,205,.16));border:1px solid rgba(255,255,255,.6);box-shadow:inset 0 1px 0 rgba(255,255,255,.8),inset 0 -1px 0 rgba(255,255,255,.2),0 10px 26px rgba(60,80,140,.16)}
+:root[data-theme="dark"] .ms-glass{background:linear-gradient(160deg,rgba(255,255,255,.16),rgba(255,255,255,.05) 55%,rgba(110,140,200,.14));border-color:rgba(255,255,255,.22);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 10px 26px rgba(0,0,0,.35)}
+.ms-glass::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(90% 60% at 10% 0%,rgba(255,255,255,.45),transparent 60%)}
+.ms-opts{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ms-opt{display:flex;flex-direction:column;align-items:flex-start;gap:1px;text-align:left;padding:9px 10px 9px 10px;border-radius:14px;border:1px solid rgba(255,255,255,.55);background:rgba(255,255,255,.28);color:var(--slate-deep);position:relative;transition:background .2s,border-color .2s,box-shadow .2s,transform .15s;box-shadow:inset 0 1px 0 rgba(255,255,255,.7)}
+:root[data-theme="dark"] .ms-opt{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.2);color:var(--ink);box-shadow:inset 0 1px 0 rgba(255,255,255,.2)}
+.ms-opt:active{transform:scale(.97)}
+.ms-opt b{font-size:13px;padding-right:20px}
+.ms-opt small{font-size:10.5px;font-weight:600;color:var(--muted)}
+.ms-opt .ck{position:absolute;top:8px;right:8px;width:18px;height:18px;border-radius:50%;border:1.5px solid rgba(111,130,168,.55);display:grid;place-items:center;transition:background .2s,border-color .2s}
+.ms-opt .ck svg{width:11px;height:11px;fill:none;stroke:#fff;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;opacity:0;transform:scale(.6);transition:opacity .2s,transform .2s}
+.ms-opt[aria-checked="true"]{background:linear-gradient(180deg,rgba(112,206,190,.78),rgba(47,138,124,.70));border-color:rgba(255,255,255,.5);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.65),0 6px 16px rgba(47,138,124,.28);text-shadow:0 1px 2px rgba(20,60,55,.3)}
+.ms-opt[aria-checked="true"] small{color:rgba(255,255,255,.88)}
+.ms-opt[aria-checked="true"] .ck{background:rgba(255,255,255,.28);border-color:rgba(255,255,255,.9)}
+.ms-opt[aria-checked="true"] .ck svg{opacity:1;transform:none}
 </style>
 </head>
 <body>
@@ -975,7 +995,19 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
       </div>
     </div>
   </div>
-  <button class="menu-item" id="tCount" type="button" role="switch" aria-checked="false"><span class="mi"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="7.5"/><path d="M12 9v4l2.5 1.5M9.5 2.5h5"/></svg></span><span class="ml">Exam countdown</span><span class="sw" aria-hidden="true"></span></button>
+  <button class="menu-item" id="tCount" type="button" aria-expanded="false" aria-controls="countSub"><span class="mi"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="7.5"/><path d="M12 9v4l2.5 1.5M9.5 2.5h5"/></svg></span><span class="ml">Exam countdown</span><span class="ns" id="countState">Off</span></button>
+  <div class="menu-sub" id="countSub">
+    <div class="ms-in" id="countSubIn">
+      <div class="ms-card ms-glass">
+        <div class="ms-title">Show countdown for</div>
+        <p class="ms-hint">Pick one or both.</p>
+        <div class="ms-opts">
+          <button type="button" class="ms-opt" id="cdCt" role="checkbox" aria-checked="false"><span class="ck" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg></span><b>CT</b><small>Class tests</small></button>
+          <button type="button" class="ms-opt" id="cdExam" role="checkbox" aria-checked="false"><span class="ck" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg></span><b>Semester final</b><small>Final exams</small></button>
+        </div>
+      </div>
+    </div>
+  </div>
   <button class="menu-item" id="tTasks" type="button" role="switch" aria-checked="false"><span class="mi"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></span><span class="ml">Upcoming classes</span><span class="sw" aria-hidden="true"></span></button>
   <div class="menu-heading">Reminders</div>
   <button class="menu-item" id="notifBtn" type="button" aria-haspopup="dialog"><span class="mi"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6.5 2 6.5H4S6 14 6 9zM10 19a2 2 0 0 0 4 0"/></svg></span><span class="ml">Notifications</span><span class="ns" id="notifState">Off</span></button>
@@ -1167,7 +1199,7 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
     {id:'quiz', label:'Quiz', color:'#F7CF8B'},
     {id:'assignment', label:'Assignment', color:'#B9A9EA'},
     {id:'lab', label:'Lab report', color:'#9FD4B5'},
-    {id:'exam', label:'Exam', color:'#E98C9B'},
+    {id:'exam', label:'Semester final exam', color:'#E98C9B'},
     {id:'other', label:'Other', color:'#C5CEDF'}
   ];
   var MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -1275,6 +1307,12 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
 
   var saved = load(); applyCfg(saved.cfg);
   var state = {view: 'week', cursor: new Date(), events: saved.events, showClasses: saved.showClasses, classOverrides: saved.classOverrides || {}, vacations: saved.vacations || [], panels: Object.assign({tasks: false, count: false, period: false, v: 2}, saved.panels && saved.panels.v === 2 ? saved.panels : {})};
+  function fixCountTypes(p) {
+    if (!p.countTypes) p.countTypes = {ct: false, exam: !!p.count};
+    p.count = !!(p.countTypes.ct || p.countTypes.exam);
+    return p;
+  }
+  fixCountTypes(state.panels);
   var WIDGET_ENABLED = false;   // widget view is OFF for now. Change to true to turn it back on.
   var widgetMode = WIDGET_ENABLED && new URLSearchParams(location.search).get('widget') === '1';
   $('widgetBtn').hidden = !WIDGET_ENABLED;
@@ -1468,7 +1506,7 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
   }
 
   /* ---------- month view ---------- */
-  var SHORTLBL = {ct:'CT', quiz:'Quiz', assignment:'Asg', lab:'Lab', exam:'Exam', other:'Other'};
+  var SHORTLBL = {ct:'CT', quiz:'Quiz', assignment:'Asg', lab:'Lab', exam:'Final', other:'Other'};
   function chipsFor(evs) {
     var h = evs.slice(0, 2).map(function (e) {
       return '<i style="background:' + typeOf(e.type).color + '">' + (SHORTLBL[e.type] || 'Other') + '</i>';
@@ -1545,14 +1583,15 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
     html += '</div>';
 
     var today0 = new Date(now.getFullYear(),now.getMonth(),now.getDate());
-    var exams = state.events.filter(function(e){return e.type==='exam' && !e.done && e.date >= ymd(today0);})
-      .sort(function(a,b){return a.date.localeCompare(b.date);}).slice(0,5);
+    var cdT = state.panels.countTypes || {}, cdLabel = {ct: 'CT', exam: 'Semester final'};
+    var exams = state.events.filter(function(e){return cdT[e.type] && !e.done && e.date >= ymd(today0);})
+      .sort(function(a,b){return a.date.localeCompare(b.date);}).slice(0,6);
     var mCount = html.length;
     html += '<div class="card"><h2>Exam countdown</h2>';
-    if (!exams.length) html += '<p class="hint">No upcoming exams added. Add an item with type Exam to see its countdown.</p>';
+    if (!exams.length) html += '<p class="hint">Nothing upcoming. Add an item with type ' + (cdT.ct && cdT.exam ? 'CT or Semester final exam' : cdT.ct ? 'CT' : 'Semester final exam') + ' to see its countdown.</p>';
     exams.forEach(function(e){
       var days=Math.round((parse(e.date)-today0)/86400000);
-      html += '<div class="countdown"><span><strong>'+esc(e.title)+'</strong><small>'+esc(e.date)+'</small></span><b>'+(days===0?'Today':days+'d')+'</b></div>';
+      html += '<div class="countdown"><span><strong>'+esc(e.title)+'</strong><small>'+cdLabel[e.type]+' \u00B7 '+esc(e.date)+'</small></span><b>'+(days===0?'Today':days+'d')+'</b></div>';
     });
     html += '</div>';
     if (!state.panels.count) html = html.slice(0, mCount);
@@ -2360,11 +2399,31 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
 
   /* ---------- panel toggles ---------- */
   function setSw(id, on) { var b = $(id); if (b) b.setAttribute('aria-checked', on ? 'true' : 'false'); }
-  var PANELS = [['tCount', 'count', 'Exam countdown'], ['tTasks', 'tasks', 'Upcoming and overdue']];
-  function setPanels(p) { state.panels = Object.assign({tasks: false, count: false, period: false, v: 2}, p && p.v === 2 ? p : {}); }
+  var PANELS = [['tTasks', 'tasks', 'Upcoming and overdue']];
+  function setPanels(p) { state.panels = fixCountTypes(Object.assign({tasks: false, count: false, period: false, v: 2}, p && p.v === 2 ? p : {})); }
   function panelLabels() {
     PANELS.forEach(function (x) { setSw(x[0], state.panels[x[1]]); });
+    var ct = state.panels.countTypes || {}, names = [];
+    if (ct.ct) names.push('CT'); if (ct.exam) names.push('Final');
+    $('countState').textContent = names.length ? names.join(' + ') : 'Off';
+    $('cdCt').setAttribute('aria-checked', ct.ct ? 'true' : 'false');
+    $('cdExam').setAttribute('aria-checked', ct.exam ? 'true' : 'false');
   }
+  function setCountSub(open) {
+    $('countSub').classList.toggle('open', open);
+    $('countSubIn').inert = !open;
+    $('tCount').setAttribute('aria-expanded', open ? 'true' : 'false');
+    $('tCount').classList.toggle('expanded', open);
+  }
+  setCountSub(false);
+  $('tCount').addEventListener('click', function () { setCountSub(!$('countSub').classList.contains('open')); });
+  [['cdCt', 'ct'], ['cdExam', 'exam']].forEach(function (x) {
+    $(x[0]).addEventListener('click', function () {
+      var ct = state.panels.countTypes; ct[x[1]] = !ct[x[1]];
+      state.panels.count = !!(ct.ct || ct.exam);
+      save(); render();
+    });
+  });
   PANELS.forEach(function (x) {
     $(x[0]).addEventListener('click', function () { state.panels[x[1]] = !state.panels[x[1]]; save(); render(); });
   });
