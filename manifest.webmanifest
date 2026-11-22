@@ -29,7 +29,7 @@
       "purpose": "maskable"
     }
   ],
-  "shortcuts": [
+  "_shortcuts_disabled_widget_view": [
     {
       "name": "Widget view",
       "short_name": "Widget",

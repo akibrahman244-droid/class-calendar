@@ -850,6 +850,64 @@ html{overflow-x:clip}
 body{touch-action:pan-y pinch-zoom}
 @keyframes tileIn{from{opacity:0;transform:translateX(var(--sx,18px)) scale(.98)}to{opacity:1;transform:none}}
 .tile-in{animation:tileIn .26s cubic-bezier(.2,.8,.2,1) backwards}
+
+/* ===== menu: class layout card ===== */
+.menu-sub{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows .28s ease,opacity .22s ease}
+.menu-sub.open{grid-template-rows:1fr;opacity:1}
+.ms-in{overflow:hidden;min-height:0}
+.ms-card{margin:2px 2px 8px;padding:11px 12px 12px;border-radius:16px;background:var(--btn);border:1px solid var(--glass-brd);box-shadow:inset 0 1px 0 rgba(255,255,255,.55)}
+.ms-title{font-size:12.5px;font-weight:800;color:var(--slate-deep)}
+.ms-hint{margin:2px 0 9px;font-size:11.5px;color:var(--muted);line-height:1.4}
+.ms-seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:3px;border-radius:13px;background:rgba(111,130,168,.13)}
+.ms-seg button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;padding:8px 10px;border-radius:10px;border:1px solid transparent;color:var(--slate-deep);transition:background .2s,color .2s}
+.ms-seg b{font-size:13px}
+.ms-seg small{font-size:10.5px;color:var(--muted);font-weight:600;line-height:1.25}
+.ms-seg button[aria-checked="true"]{background:linear-gradient(180deg,rgba(150,168,205,.82),rgba(96,116,166,.74));border-color:rgba(255,255,255,.40);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 4px 12px rgba(70,90,150,.18)}
+.ms-seg button[aria-checked="true"] small{color:rgba(255,255,255,.86)}
+
+/* ===== period view ===== */
+.cls .t.pv-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:3px}
+.pv-cls .pv-ord{padding:2px 10px;border-radius:999px;background:rgba(255,255,255,.55);border:1px solid rgba(255,255,255,.75);font-size:11px;font-weight:800;color:#26364B}
+.pv-cls .pv-time{font-size:12px;font-weight:700}
+.pv-free{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px 10px;padding:10px 13px;border-radius:16px;
+  border:1px dashed rgba(111,130,168,.42);color:var(--muted);
+  background:linear-gradient(135deg,rgba(111,130,168,.14),rgba(111,130,168,.04)),var(--glass);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.5);-webkit-backdrop-filter:blur(10px) saturate(1.4);backdrop-filter:blur(10px) saturate(1.4)}
+.pv-l{display:flex;flex-direction:column;gap:1px;min-width:0}
+.pv-free .pv-ord{font-size:12.5px;font-weight:800;color:var(--slate-deep)}
+.pv-free .pv-time,.pv-break .pv-time{font-size:11.5px;font-weight:600}
+.pv-note{font-size:12.5px;font-weight:700;opacity:.85}
+.pv-cancel{border-color:rgba(214,70,90,.45);background:linear-gradient(135deg,rgba(214,70,90,.15),rgba(214,70,90,.04)),var(--glass);color:#C23B52}
+.pv-cancel .pv-note s{opacity:.8}
+.pv-break{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 14px;border-radius:999px;font-size:12.5px;
+  border:1px solid rgba(238,160,60,.42);color:#8A5A12;
+  background:linear-gradient(90deg,rgba(255,196,110,.34),rgba(255,196,110,.10)),var(--glass);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.55);-webkit-backdrop-filter:blur(10px) saturate(1.4);backdrop-filter:blur(10px) saturate(1.4)}
+.pv-break.lunch{border-color:rgba(50,170,148,.42);color:#1F7566;background:linear-gradient(90deg,rgba(90,205,175,.32),rgba(90,205,175,.09)),var(--glass)}
+.pv-bl{display:flex;align-items:center;gap:8px;min-width:0}
+.pv-bl svg{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.pv-break .pv-ord{font-weight:800}
+:root[data-theme="dark"] .pv-break{color:#F2C98A}
+:root[data-theme="dark"] .pv-break.lunch{color:#8FE0CC}
+:root[data-theme="dark"] .pv-cancel{color:#FF9AA8}
+.pv-past{opacity:.55}
+.pv-now{box-shadow:0 0 0 2px var(--teal),inset 0 1px 0 rgba(255,255,255,.5)}
+.pv-now .pv-time{color:var(--teal);font-weight:800}
+
+/* ===== v5: time no longer hides under the 3-dot button; smaller glass layout switch ===== */
+.cls .t.pv-head{padding-right:40px}
+.ms-card{padding:10px 11px 9px;border-radius:15px}
+.ms-title{font-size:12px}
+.ms-hint{margin:7px 3px 0;font-size:11px}
+.ms-seg{gap:3px;padding:3px;border-radius:999px;background:rgba(111,130,168,.12);border:1px solid var(--glass-brd);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.55);-webkit-backdrop-filter:blur(10px) saturate(1.5);backdrop-filter:blur(10px) saturate(1.5)}
+.ms-seg button{align-items:center;justify-content:center;text-align:center;padding:6px 8px;border-radius:999px;white-space:nowrap}
+.ms-seg b{font-size:12.5px}
+.ms-seg button[aria-checked="true"]{background:linear-gradient(180deg,rgba(150,168,205,.78),rgba(96,116,166,.68));
+  -webkit-backdrop-filter:blur(10px) saturate(1.6);backdrop-filter:blur(10px) saturate(1.6);border:1px solid rgba(255,255,255,.42);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 3px 10px rgba(70,90,150,.18);text-shadow:0 1px 2px rgba(30,45,90,.25)}
+
+#widgetBtn[hidden]{display:none}
 </style>
 </head>
 <body>
@@ -891,6 +949,19 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
   <button class="menu-item" id="searchToggle" type="button"><span class="mi"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4-4"/></svg></span><span class="ml">Search events</span></button>
   <div class="menu-heading">Show on calendar</div>
   <button class="menu-item" id="toggleCls" type="button" role="switch" aria-checked="false"><span class="mi"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="3"/><path d="M3.5 9.5h17M9 4.5v15"/></svg></span><span class="ml">Classes</span><span class="sw" aria-hidden="true"></span></button>
+
+  <div class="menu-sub" id="classLayout">
+    <div class="ms-in" id="classLayoutIn">
+      <div class="ms-card">
+        <div class="ms-title">Class layout</div>
+        <div class="ms-seg" role="radiogroup" aria-label="Class layout">
+          <button type="button" role="radio" id="lvCompact" aria-checked="true"><b>Compact view</b></button>
+          <button type="button" role="radio" id="lvPeriod" aria-checked="false"><b>Period view</b></button>
+        </div>
+        <p class="ms-hint" id="lvHint"></p>
+      </div>
+    </div>
+  </div>
   <button class="menu-item" id="tCount" type="button" role="switch" aria-checked="false"><span class="mi"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="7.5"/><path d="M12 9v4l2.5 1.5M9.5 2.5h5"/></svg></span><span class="ml">Exam countdown</span><span class="sw" aria-hidden="true"></span></button>
   <button class="menu-item" id="tTasks" type="button" role="switch" aria-checked="false"><span class="mi"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></span><span class="ml">Upcoming classes</span><span class="sw" aria-hidden="true"></span></button>
   <div class="menu-heading">Reminders</div>
@@ -1190,8 +1261,10 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
   window.getCalendarData = function() { return {events:state.events,showClasses:state.showClasses,cfg:JSON.stringify(getCfg()),panels:state.panels,classOverrides:state.classOverrides,vacations:state.vacations}; };
 
   var saved = load(); applyCfg(saved.cfg);
-  var state = {view: 'week', cursor: new Date(), events: saved.events, showClasses: saved.showClasses, classOverrides: saved.classOverrides || {}, vacations: saved.vacations || [], panels: Object.assign({tasks: false, count: false, v: 2}, saved.panels && saved.panels.v === 2 ? saved.panels : {})};
-  var widgetMode = new URLSearchParams(location.search).get('widget') === '1';
+  var state = {view: 'week', cursor: new Date(), events: saved.events, showClasses: saved.showClasses, classOverrides: saved.classOverrides || {}, vacations: saved.vacations || [], panels: Object.assign({tasks: false, count: false, period: false, v: 2}, saved.panels && saved.panels.v === 2 ? saved.panels : {})};
+  var WIDGET_ENABLED = false;   // widget view is OFF for now. Change to true to turn it back on.
+  var widgetMode = WIDGET_ENABLED && new URLSearchParams(location.search).get('widget') === '1';
+  $('widgetBtn').hidden = !WIDGET_ENABLED;
   if (widgetMode) document.body.classList.add('widget-mode');
   function applyTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
@@ -1279,6 +1352,70 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
   }
   var mq = window.matchMedia('(max-width: 720px)');
   function isMobile() { return mq.matches; }
+  /*PV-START*/
+  var PORD = ['', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th'];
+  var PV_ICON = {
+    tiffin: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9h11v4a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4V9zM16 10h1.5a2 2 0 0 1 0 4H16M8 4v2M12 4v2"/></svg>',
+    lunch: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>'
+  };
+  function periodLabel(a, b) { return a === b ? PORD[a] + ' period' : PORD[a] + ' \u2013 ' + PORD[b] + ' period'; }
+  function breakHtml(kind, s, e, isToday, nowMin) {
+    return '<div class="pv-break ' + kind + (isToday && e <= nowMin ? ' pv-past' : '') + (isToday && s <= nowMin && nowMin < e ? ' pv-now' : '') + '"><span class="pv-bl">' + PV_ICON[kind] +
+      '<span class="pv-ord">' + (kind === 'lunch' ? 'Lunch &amp; prayer break' : 'Tiffin break') + '</span></span><span class="pv-time">' + fmtTime(s) + '\u2013' + fmtTime(e) + '</span></div>';
+  }
+  function periodTimeline(d, now, cls) {
+    var k = ymd(d), isToday = k === ymd(now), nowMin = now.getHours() * 60 + now.getMinutes(), cancelled = [], rows = [], used = {}, p = 1, i;
+    function over(c, n) { return c.start < PERIOD[n][1] && c.end > PERIOD[n][0]; }
+    function taken(n) { return cls.some(function (o) { return over(o, n); }) || cancelled.some(function (x) { return n >= x.a && n <= x.b; }); }
+    if (state.classOverrides && Object.prototype.hasOwnProperty.call(state.classOverrides, k)) {
+      (ROUTINE[d.getDay()] || []).forEach(function (r) {
+        if (!cls.some(function (c) { return c.code === r[2]; })) cancelled.push({a: r[0], b: r[1], code: r[2]});
+      });
+    }
+    while (p <= 9) {
+      var c = null, x = null, q = p;
+      for (i = 0; i < cls.length; i++) if (!used[cls[i].id] && over(cls[i], p)) { c = cls[i]; break; }
+      if (!c) for (i = 0; i < cancelled.length; i++) if (p >= cancelled[i].a && p <= cancelled[i].b) { x = cancelled[i]; break; }
+      if (c) {
+        while (q < 9 && over(c, q + 1) && !cls.some(function (o) { return o !== c && over(o, q + 1); })) q++;
+        used[c.id] = true; rows.push({t: 'class', c: c, a: p, b: q});
+      }
+      else if (x) { q = Math.max(p, x.b); rows.push({t: 'cancel', x: x, a: p, b: q}); }
+      else {   // consecutive free periods (inside the same part of the day) become ONE card: "1st – 3rd period"
+        var lim = p <= 3 ? 3 : p <= 6 ? 6 : 9;
+        while (q < lim && !taken(q + 1)) q++;
+        rows.push({t: 'free', a: p, b: q});
+      }
+      p = q + 1;
+    }
+    var extra = false;
+    cls.forEach(function (c) {   // a class whose time clashes with another one must never disappear
+      if (used[c.id]) return;
+      var a = 0, b = 0, n;
+      for (n = 1; n <= 9; n++) if (over(c, n)) { if (!a) a = n; b = n; }
+      rows.push({t: 'class', c: c, a: a || 9, b: b || a || 9, extra: true}); extra = true;
+    });
+    if (extra) rows.sort(function (x, y) { return (x.t === 'class' ? x.c.start : PERIOD[x.a][0]) - (y.t === 'class' ? y.c.start : PERIOD[y.a][0]); });
+    var html = '';
+    rows.forEach(function (r) {
+      var s = r.t === 'class' ? r.c.start : PERIOD[r.a][0], e = r.t === 'class' ? r.c.end : PERIOD[r.b][1];
+      var past = isToday && e <= nowMin, cur = isToday && s <= nowMin && nowMin < e;
+      var lab = periodLabel(r.a, r.b), tm = fmtTime(s) + '\u2013' + fmtTime(e);
+      var left = '<span class="pv-l"><span class="pv-ord">' + lab + '</span><span class="pv-time">' + tm + '</span></span>';
+      if (r.t === 'class') {
+        html += clsHtml(r.c, cur).replace('<div class="cls', '<div class="cls pv-cls' + (past ? ' pv-past' : ''))
+          .replace(/<div class="t">[^<]*<\/div>/, '<div class="t pv-head"><span class="pv-ord">' + lab + '</span><span class="pv-time">' + tm + '</span></div>');
+      } else if (r.t === 'cancel') {
+        html += '<div class="pv-free pv-cancel' + (past ? ' pv-past' : '') + '">' + left + '<span class="pv-note"><s>' + esc(r.x.code) + '</s> cancelled</span></div>';
+      } else {
+        html += '<div class="pv-free' + (past ? ' pv-past' : '') + (cur ? ' pv-now' : '') + '">' + left + '<span class="pv-note">No class</span></div>';
+      }
+      if (r.b === 3 && !r.extra) html += breakHtml('tiffin', PERIOD[3][1], PERIOD[4][0], isToday, nowMin);
+      if (r.b === 6 && !r.extra) html += breakHtml('lunch', PERIOD[6][1], PERIOD[7][0], isToday, nowMin);
+    });
+    return html;
+  }
+  /*PV-END*/
   function dayHtml(d, now, single) {
     var k = ymd(d), today = ymd(now);
     var nowMin = now.getHours() * 60 + now.getMinutes();
@@ -1289,11 +1426,13 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
       '<header class="day-h"><span class="nm">' + DAYS[d.getDay()] + '</span><span class="dt">' + d.getDate() + ' ' + MON[d.getMonth()] + '</span></header>' +
       '<div class="day-b">';
     if (vacation) html += '<div class="vacation-banner' + (k < today ? ' past' : '') + '">Vacation</div>';
+    var pv = state.showClasses && state.panels && state.panels.period && !vacation && k >= ROUTINE_START && ((ROUTINE[d.getDay()] || []).length || cls.length);
     var items = [];
     evs.forEach(function (e) { items.push({m: e.time ? +e.time.slice(0, 2) * 60 + +e.time.slice(3, 5) : -1, h: evHtml(e)}); });
-    cls.forEach(function (c) { items.push({m: c.start, h: clsHtml(c, k === today && c.start <= nowMin && nowMin < c.end)}); });
+    if (!pv) cls.forEach(function (c) { items.push({m: c.start, h: clsHtml(c, k === today && c.start <= nowMin && nowMin < c.end)}); });
     items.sort(function (a, b) { return a.m - b.m; }).forEach(function (i) { html += i.h; });
-    if (!evs.length && !cls.length && !vacation) html += '<p class="empty">Nothing scheduled</p>';
+    if (pv) html += periodTimeline(d, now, cls);
+    if (!evs.length && !cls.length && !vacation && !pv) html += '<p class="empty">Nothing scheduled</p>';
     return html + '</div><button class="add" data-add="' + k + '">+ Add</button></section>';
   }
   function dotsFor(k) {
@@ -1470,7 +1609,7 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
     if (widgetMode) { renderWidget(now); return; }
     $('vWeek').setAttribute('aria-pressed', state.view === 'week');
     $('vMonth').setAttribute('aria-pressed', state.view === 'month');
-    setSw('toggleCls', state.showClasses); panelLabels();
+    setSw('toggleCls', state.showClasses); panelLabels(); layoutUI();
     if (state.view === 'week') {
       var ws = weekStart(c), we = addDays(ws, 6);
       $('range').textContent = ws.getDate() + ' ' + MON[ws.getMonth()] + ' \u2013 ' + we.getDate() + ' ' + MON[we.getMonth()] + ' ' + we.getFullYear();
@@ -2194,10 +2333,22 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
   badge.addEventListener('click', function () { setBadge(!badge.classList.contains('min')); });
   try { if (localStorage.getItem(BKEY) === '1') { badge.classList.add('min'); badge.setAttribute('aria-expanded', 'false'); } } catch (e) {}
 
+  /* ---------- class layout: compact view / period view ---------- */
+  function layoutUI() {
+    var on = !!state.showClasses, per = !!(state.panels && state.panels.period);
+    $('classLayout').classList.toggle('open', on);
+    $('classLayoutIn').inert = !on;
+    $('lvCompact').setAttribute('aria-checked', per ? 'false' : 'true');
+    $('lvPeriod').setAttribute('aria-checked', per ? 'true' : 'false');
+    $('lvHint').textContent = per ? 'Every period with breaks and free slots.' : 'Only the classes of the day.';
+  }
+  $('lvCompact').addEventListener('click', function () { state.panels.period = false; save(); render(); });
+  $('lvPeriod').addEventListener('click', function () { state.panels.period = true; save(); render(); });
+
   /* ---------- panel toggles ---------- */
   function setSw(id, on) { var b = $(id); if (b) b.setAttribute('aria-checked', on ? 'true' : 'false'); }
   var PANELS = [['tCount', 'count', 'Exam countdown'], ['tTasks', 'tasks', 'Upcoming and overdue']];
-  function setPanels(p) { state.panels = Object.assign({tasks: false, count: false, v: 2}, p && p.v === 2 ? p : {}); }
+  function setPanels(p) { state.panels = Object.assign({tasks: false, count: false, period: false, v: 2}, p && p.v === 2 ? p : {}); }
   function panelLabels() {
     PANELS.forEach(function (x) { setSw(x[0], state.panels[x[1]]); });
   }
