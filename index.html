@@ -908,6 +908,19 @@ body{touch-action:pan-y pinch-zoom}
   box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 3px 10px rgba(70,90,150,.18);text-shadow:0 1px 2px rgba(30,45,90,.25)}
 
 #widgetBtn[hidden]{display:none}
+
+/* ===== scroll smoothness on phones/touch: no blur on the many scrolling cards ===== */
+@media (max-width:900px), (pointer:coarse){
+  :root:not(#g) .day, :root:not(#g) .card, :root:not(#g) .day-h, :root:not(#g) .tools, :root:not(#g) .search-results, :root:not(#g) .widget-surface,
+  :root:not(#g) .btn, :root:not(#g) .card .btn, :root:not(#g) .actions .btn, :root:not(#g) .seg, :root:not(#g) .add, :root:not(#g) .sd[aria-pressed="true"],
+  :root:not(#g) .seg button[aria-pressed="true"], :root:not(#g) .btn.primary, :root:not(#g) .actions .btn.primary,
+  .cls, .ev, .cls .class-menu-trigger, .pv-break, .pv-free, .tools-clear, .ms-seg, .ms-seg button[aria-checked="true"], .rbar, .rback, .badge{
+    -webkit-backdrop-filter:none; backdrop-filter:none;
+  }
+  .cls, .ev{background:color-mix(in srgb,var(--c) 94%,#fff 6%)}
+  :root[data-theme="dark"] .cls, :root[data-theme="dark"] .ev{background:color-mix(in srgb,var(--c) 92%,transparent)}
+  .day::before,.card::before{display:none}
+}
 </style>
 </head>
 <body>
@@ -2319,7 +2332,7 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
     requestAnimationFrame(function () {
       scrollTick = false;
       var y = window.scrollY, b = document.body;
-      if (!b.classList.contains('scrolled')) { if (y > 70 && document.documentElement.scrollHeight - innerHeight > 200) b.classList.add('scrolled'); }
+      if (!b.classList.contains('scrolled')) { if (y > 70 && document.documentElement.scrollHeight - innerHeight > 200 && !(window.matchMedia && matchMedia('(max-width:720px)').matches)) b.classList.add('scrolled'); }
       else if (y < 20) b.classList.remove('scrolled');
     });
   }, {passive: true});
