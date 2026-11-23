@@ -944,12 +944,13 @@ body{touch-action:pan-y pinch-zoom}
 </style>
 </head>
 <body>
-<div id="loader" role="status" aria-label="Loading"><img src="loading-logo.png" alt="Class Calendar" width="340" height="340"><div class="ld-bar"></div></div>
+<div id="loader" role="status" aria-label="Loading"><img data-src="loading-logo.png" alt="Class Calendar" width="340" height="340"><div class="ld-bar"></div></div>
 <script>(function(){var d=document.getElementById('loader');if(!d)return;
 try{if(localStorage.getItem('akib-calendar-theme')==='dark')document.documentElement.setAttribute('data-theme','dark')}catch(e){}
 var standalone=false;try{standalone=(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||window.navigator.standalone===true}catch(e){}
 /* installed app: the phone already shows the logo splash, so skip a second logo screen */
 if(standalone){d.parentNode.removeChild(d);return}
+var li=d.querySelector('img[data-src]');if(li)li.src=li.getAttribute('data-src');
 var t0=Date.now();function hide(){if(d.classList.contains('hide'))return;d.classList.add('hide');setTimeout(function(){if(d.parentNode)d.parentNode.removeChild(d)},700)}
 function done(){setTimeout(hide,Math.max(0,1200-(Date.now()-t0)))}
 if(document.readyState==='complete')done();else window.addEventListener('load',done);setTimeout(hide,5000)})();</script>
@@ -1359,6 +1360,17 @@ if(document.readyState==='complete')done();else window.addEventListener('load',d
   $('installTop').addEventListener('click', doInstall);
   if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
     window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
+    (function () {
+      // A new version is downloaded quietly. It switches in only when the app is in the background, never while it is being used.
+      var had = !!navigator.serviceWorker.controller, pending = false;
+      navigator.serviceWorker.addEventListener('controllerchange', function () { if (had) pending = true; });
+      document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState !== 'hidden' || !pending) return;
+        var busy = document.querySelector('dialog[open]'), a = document.activeElement;
+        if (busy || (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && a.value)) return;
+        pending = false; location.reload();
+      });
+    })();
   }
   function setMenu(open){
     $('quickMenu').classList.toggle('open',open); if(open) placeMenu();

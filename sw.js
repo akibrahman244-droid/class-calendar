@@ -1,11 +1,10 @@
-// Offline-first service worker. Online: always fetches the latest files (and refreshes the cache).
-// Offline: serves the saved copy so the app still opens and works.
-var CACHE = 'class-calendar-v32-icon-same';
+// Offline-first service worker. Page: network first with a short wait, then the saved copy (fast start). Other files: saved copy, refreshed in the background.
+var CACHE = 'class-calendar-v35-fresh-first';
 var CORE = ['./', 'index.html', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'favicon-64.png', 'badge-logo.png', 'splash-192.png', 'splash-512.png', 'loading-logo.png'];
 
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) {
-    return Promise.all(CORE.map(function (u) { return c.add(u).catch(function () {}); }));
+    return Promise.all(CORE.map(function (u) { return c.add(new Request(u, { cache: 'reload' })).catch(function () {}); }));
   }).then(function () { return self.skipWaiting(); }));
 });
 
@@ -38,10 +37,30 @@ self.addEventListener('fetch', function (e) {
   }
   if (url.origin !== self.location.origin) return;
 
-  // App files: network first, fall back to the saved copy when offline
-  e.respondWith(fetch(req).then(function (r) { return put(req, r); }).catch(function () {
-    return caches.match(req, { ignoreSearch: true }).then(function (hit) {
-      if (hit) return hit;
+  // The page itself: try the network first, but only wait a moment. Fast connection = newest version on the first open.
+  // Slow or no connection = open the saved copy right away, and the newest version is saved for next time.
+  if (req.mode === 'navigate' || /\/(index\.html)?$/.test(url.pathname)) {
+    var started = fetch(url.href, { cache: 'no-cache', credentials: 'same-origin' }).then(function (r) { return put(req, r); });
+    var quick = new Promise(function (resolve) {
+      var t = setTimeout(function () { resolve(null); }, 1500);
+      started.then(function (r) { clearTimeout(t); resolve(r); }, function () { clearTimeout(t); resolve(null); });
+    });
+    e.waitUntil(started.catch(function () {}));
+    e.respondWith(quick.then(function (r) {
+      if (r) return r;
+      return caches.match(req, { ignoreSearch: true }).then(function (hit) {
+        return hit || caches.match('index.html').then(function (h) { return h || started.catch(function () { return Response.error(); }); });
+      });
+    }));
+    return;
+  }
+
+  // App files: open instantly from the saved copy, refresh it in the background (next launch has the update)
+  e.respondWith(caches.match(req, { ignoreSearch: true }).then(function (hit) {
+    var net = fetch(req).then(function (r) { return put(req, r); }).catch(function () { return null; });
+    if (hit) { e.waitUntil(net); return hit; }
+    return net.then(function (r) {
+      if (r) return r;
       if (req.mode === 'navigate') return caches.match('index.html').then(function (h) { return h || caches.match('./'); });
       return Response.error();
     });
